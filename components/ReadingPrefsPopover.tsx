@@ -44,7 +44,6 @@ export function ReadingPrefsPopover({
           {t("label")}
         </p>
 
-        {/* Font size */}
         <div className="mb-4">
           <p className="text-xs text-muted-foreground mb-2">{t("fontSize")}</p>
           <div className="flex gap-1">
@@ -68,7 +67,6 @@ export function ReadingPrefsPopover({
           </div>
         </div>
 
-        {/* High contrast */}
         <div className="flex items-center gap-2">
           <Checkbox
             id="high-contrast"

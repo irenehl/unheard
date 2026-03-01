@@ -1,0 +1,110 @@
+import { getTranslations } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { VersionPanel } from "@/components/VersionPanel";
+import { Heart, Mic } from "lucide-react";
+import Link from "next/link";
+
+export default async function StoryPage({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}) {
+  const { locale, id } = await params;
+  const t = await getTranslations();
+
+  if (id.startsWith("placeholder")) {
+    notFound();
+  }
+
+  const testimony = await fetchQuery(api.testimonies.getById, {
+    id: id as Id<"testimonies">,
+  });
+
+  if (!testimony) {
+    notFound();
+  }
+
+  const displayName = testimony.isAnonymous
+    ? t("feed.anonymous")
+    : testimony.authorName ?? t("feed.anonymous");
+
+  const formattedDate = new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(testimony.createdAt));
+
+  const typeKey =
+    `feed.type${testimony.type.charAt(0).toUpperCase() + testimony.type.slice(1)}` as
+      | "feed.typeHonor"
+      | "feed.typeTell";
+
+  const isHonor = testimony.type === "honor";
+
+  return (
+    <div className="min-h-screen bg-background pb-20">
+      <div className="border-t-[3px] border-foreground mt-8 mb-12 max-w-4xl mx-auto" />
+
+      <article className="mx-auto max-w-3xl px-6 sm:px-8">
+        <Link
+          href={`/${locale}`}
+          className="inline-block mb-12 text-[10px] font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors border-b border-transparent hover:border-foreground pb-0.5"
+        >
+          {t("common.backToFront")}
+        </Link>
+
+        <header className="mb-12 border-b border-border pb-8">
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-3 text-xs font-bold tracking-widest uppercase text-foreground">
+              <span className="border border-foreground px-3 py-1">
+                {t(`categories.${testimony.category}`)}
+              </span>
+              <span className="text-muted-foreground">—</span>
+              <time dateTime={new Date(testimony.createdAt).toISOString()}>
+                {formattedDate}
+              </time>
+            </div>
+
+            <h1 
+              className="text-4xl md:text-6xl text-foreground leading-[1.1] tracking-tight"
+              style={{ fontFamily: "var(--font-display), var(--font-serif), Georgia, serif" }}
+            >
+              {t("common.storyOf")} {t(`categories.${testimony.category}`)}
+            </h1>
+            
+            <div className="flex items-center gap-3 text-sm font-mono tracking-widest uppercase text-muted-foreground mt-4">
+              <span className={`flex items-center gap-1.5 ${isHonor ? "text-primary" : ""}`}>
+                {isHonor ? (
+                  <Heart className="h-3.5 w-3.5 fill-current" aria-hidden />
+                ) : (
+                  <Mic className="h-3.5 w-3.5" aria-hidden />
+                )}
+                {t(typeKey)}
+              </span>
+              <span>·</span>
+              <span>
+                {t("feed.postedBy")} <span className="text-foreground font-bold">{displayName}</span>
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <div className="prose-lg max-w-none">
+          <VersionPanel
+            testimonyId={testimony._id}
+            originalText={testimony.originalText}
+            originalLanguage={testimony.originalLanguage}
+            editedText={testimony.editedText}
+            translatedText={testimony.translatedText}
+            isFullPage={true}
+          />
+        </div>
+      </article>
+
+      <div className="border-b-[3px] border-foreground mt-20 max-w-4xl mx-auto" />
+    </div>
+  );
+}

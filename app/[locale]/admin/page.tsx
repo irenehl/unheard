@@ -12,8 +12,8 @@ export default async function AdminPage() {
   }
 
   return (
-    <main id="main-content" className="mx-auto max-w-4xl px-4 py-12">
+    <div className="mx-auto max-w-4xl px-4 py-12">
       <AdminPanel />
-    </main>
+    </div>
   );
 }

@@ -1,37 +1,67 @@
-import { useTranslations } from "next-intl";
+import { getTranslations, getLocale } from "next-intl/server";
+import Link from "next/link";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { FeedClient } from "@/components/FeedClient";
 
-export default function FeedPage() {
-  const t = useTranslations("feed");
+export default async function FeedPage() {
+  const [t, locale] = await Promise.all([getTranslations(), getLocale()]);
 
   return (
-    <main id="main-content">
-      {/* Hero */}
-      <header
-        role="banner"
-        className="py-16 px-4 text-center border-b border-border"
+    <>
+      <section
+        aria-labelledby="hero-title"
+        className="relative flex min-h-[68vh] flex-col justify-between border-b border-border px-6 py-8 sm:px-10 lg:px-16 overflow-hidden"
       >
-        <h1
-          className="font-serif text-6xl font-semibold tracking-tight text-foreground sm:text-7xl"
-          style={{ fontFamily: "var(--font-serif), Georgia, serif" }}
-        >
-          {t("title")}
-        </h1>
-        <p className="mt-4 text-lg text-muted-foreground max-w-md mx-auto">
-          {t("tagline")}
-        </p>
-      </header>
+        <div className="anim-0 flex items-center justify-between">
+          <span className="font-mono text-[0.6rem] tracking-[0.3em] text-muted-foreground uppercase">
+            {t("landing.eyebrow")}
+          </span>
+          <span className="font-mono text-[0.6rem] tracking-[0.3em] text-muted-foreground uppercase">
+            {t("landing.docRef")}
+          </span>
+        </div>
 
-      {/* Sticky filters */}
-      <nav aria-label="Filtros">
+        <div>
+          <h1
+            id="hero-title"
+            className="hero-title anim-1 text-foreground"
+          >
+            {t("feed.title")}
+          </h1>
+
+          <div className="anim-2 mt-5 border-t border-border pt-5 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+            <p className="text-sm text-muted-foreground leading-[1.85] max-w-[38ch]">
+              {t("landing.tagline")}
+            </p>
+            <div className="flex items-center gap-5 shrink-0">
+              <Link
+                href={`/${locale}/submit`}
+                className="inline-flex items-center h-9 bg-primary px-5 text-xs font-medium tracking-wide text-primary-foreground hover:bg-primary/90 transition-colors uppercase"
+              >
+                {t("landing.ctaPrimary")}
+              </Link>
+              <a
+                href="#stories"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {t("landing.ctaSecondary")} ↓
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <nav aria-label={t("feed.filterAll")}>
         <CategoryFilter />
       </nav>
 
-      {/* Feed */}
-      <div className="mx-auto max-w-2xl px-4 py-8">
+      <section
+        id="stories"
+        aria-label={t("feed.title")}
+        className="mx-auto max-w-7xl px-4 sm:px-6 py-10"
+      >
         <FeedClient />
-      </div>
-    </main>
+      </section>
+    </>
   );
 }

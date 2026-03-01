@@ -10,22 +10,33 @@ export default async function SubmitPage() {
   ]);
 
   return (
-    <main id="main-content" className="mx-auto max-w-2xl px-4 py-12">
+    <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16 md:py-24">
       <Link
         href={`/${locale}`}
-        className="mb-6 inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="mb-12 inline-flex items-center gap-2 font-mono text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-all hover:-translate-x-1"
       >
         ← {tNav("home")}
       </Link>
 
-      <h1
-        className="font-serif text-4xl font-semibold text-foreground mb-8"
-        style={{ fontFamily: "var(--font-serif), Georgia, serif" }}
-      >
-        {t("title")}
-      </h1>
+      <header className="mb-16 border-b border-border pb-10">
+        <p className="mb-6 font-mono text-[0.65rem] tracking-[0.3em] uppercase text-muted-foreground">
+          {t("intro").split(".")[0]}.
+        </p>
+        <h1
+          className="text-foreground leading-tight"
+          style={{
+            fontFamily:
+              "var(--font-display), var(--font-serif), Georgia, serif",
+            fontSize: "clamp(2.5rem, 8vw, 4.5rem)",
+            fontWeight: 300,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          {t("title")}
+        </h1>
+      </header>
 
       <SubmitForm />
-    </main>
+    </div>
   );
 }

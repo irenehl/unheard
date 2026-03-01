@@ -136,7 +136,6 @@ export function AdminPanel() {
         </div>
       )}
 
-      {/* Remove confirmation dialog */}
       <Dialog open={confirmId !== null} onOpenChange={() => setConfirmId(null)}>
         <DialogContent>
           <DialogHeader>

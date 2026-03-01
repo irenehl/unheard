@@ -2,7 +2,20 @@
   "nav": {
     "home": "Home",
     "submit": "Share a story",
-    "admin": "Admin"
+    "admin": "Admin",
+    "signIn": "Sign in",
+    "tagline": "Stories the world",
+    "taglineSecond": "never documented",
+    "volume": "Vol. I — No. 1",
+    "mainNav": "Main navigation",
+    "homeLink": "Ellas — home"
+  },
+  "landing": {
+    "eyebrow": "Collective memory",
+    "docRef": "Permanent collection",
+    "tagline": "Stories of women the world never documented. Here, they have a name, a date, and witnesses.",
+    "ctaPrimary": "Share a story",
+    "ctaSecondary": "Read the stories"
   },
   "feed": {
     "title": "Ellas",
@@ -15,7 +28,8 @@
     "postedBy": "Shared by",
     "anonymous": "Anonymous",
     "typeHonor": "Honor",
-    "typeTell": "My story"
+    "typeTell": "My story",
+    "categoriesLabel": "Categories"
   },
   "categories": {
     "work": "Work",
@@ -43,6 +57,7 @@
   },
   "submit": {
     "title": "Share a story",
+    "intro": "Your story deserves to exist. Whether it's yours or someone you admire. Write in any language.",
     "typeLabel": "What kind of story is this?",
     "typeHonor": "Honor — someone else's story",
     "typeHonorDesc": "To honor a woman you admire. She doesn't need to know.",
@@ -59,7 +74,8 @@
     "successTitle": "Story published",
     "successMessage": "Thank you for giving voice to this story.",
     "errorGeneric": "Something went wrong. Please try again.",
-    "processingNotice": "Your story will be processed by AI to detect language, correct spelling, and generate translations. Your original voice is always preserved."
+    "processingNotice": "Your story will be processed by AI to detect language, correct spelling, and generate translations. Your original voice is always preserved.",
+    "charCount": "characters"
   },
   "admin": {
     "title": "Admin panel",
@@ -79,5 +95,14 @@
     "button": "Report",
     "confirm": "Report this story?",
     "success": "Story reported"
+  },
+  "common": {
+    "language": "Language",
+    "backToFront": "← Back to Front Page",
+    "storyOf": "A Story of",
+    "skipToContent": "Skip to main content",
+    "toggleTheme": "Toggle theme",
+    "themeLight": "Light theme",
+    "themeDark": "Dark theme"
   }
 }

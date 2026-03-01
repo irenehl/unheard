@@ -8,6 +8,11 @@ const intlMiddleware = createMiddleware(routing);
 const isAdminRoute = createRouteMatcher(["/:locale/admin(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
+  // Skip locale routing for API routes
+  if (req.nextUrl.pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
   if (isAdminRoute(req)) {
     const { sessionClaims } = await auth();
     const role = (sessionClaims?.metadata as { role?: string } | undefined)

@@ -4,12 +4,10 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { ChevronDown, BookOpen } from "lucide-react";
+import { Doc } from "@/convex/_generated/dataModel";
+import { ChevronDown } from "lucide-react";
 import { TestimonyCard } from "./TestimonyCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-
 type Category =
   | "work"
   | "family"
@@ -19,22 +17,18 @@ type Category =
   | "education"
   | "courage";
 
-function SkeletonCard() {
+function SkeletonEntry() {
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex gap-2">
-          <Skeleton className="h-5 w-20 rounded-full" />
-          <Skeleton className="h-5 w-16 rounded-full" />
-        </div>
-        <Skeleton className="h-4 w-40 mt-1" />
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-4 w-full mb-2" />
-        <Skeleton className="h-4 w-5/6 mb-2" />
-        <Skeleton className="h-4 w-4/6" />
-      </CardContent>
-    </Card>
+    <div className="py-7 border-t border-border first:border-t-0">
+      <div className="flex gap-4 mb-4">
+        <Skeleton className="h-2.5 w-16 bg-secondary" />
+        <Skeleton className="h-2.5 w-10 bg-secondary" />
+        <Skeleton className="h-2.5 w-24 bg-secondary" />
+      </div>
+      <Skeleton className="h-4 w-full mb-3 bg-secondary" />
+      <Skeleton className="h-4 w-5/6 mb-3 bg-secondary" />
+      <Skeleton className="h-4 w-3/5 bg-secondary" />
+    </div>
   );
 }
 
@@ -56,39 +50,57 @@ export function FeedClient() {
 
   if (status === "LoadingFirstPage") {
     return (
-      <div aria-busy="true" aria-live="polite" className="space-y-4">
-        <SkeletonCard />
-        <SkeletonCard />
-        <SkeletonCard />
+      <div aria-busy="true" aria-live="polite" className="border-t-[3px] border-b-[3px] border-foreground mt-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border">
+          <div className="bg-background md:col-span-2 lg:col-span-2">
+            <SkeletonEntry />
+          </div>
+          <div className="bg-background">
+            <SkeletonEntry />
+          </div>
+          <div className="bg-background">
+            <SkeletonEntry />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (results.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 py-20 text-center text-muted-foreground">
-        <BookOpen className="h-12 w-12 opacity-30" />
-        <p className="text-sm">{t("empty")}</p>
-      </div>
+      <section aria-label={t("title")} className="border-t-[3px] border-b-[3px] border-foreground mt-8 mb-12">
+        <div className="py-20 text-center">
+          <p className="text-muted-foreground">{t("empty")}</p>
+        </div>
+      </section>
     );
   }
 
   return (
-    <section aria-label={t("title")}>
-      <ol className="space-y-4">
-        {results.map((testimony) => (
-          <li key={testimony._id}>
-            <TestimonyCard testimony={testimony as any} />
-          </li>
-        ))}
-      </ol>
+    <section aria-label={t("title")} className="border-t-[3px] border-b-[3px] border-foreground mt-8 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border">
+            {results.map((testimony, index) => {
+          const isFirst = index === 0;
+          return (
+            <div 
+              key={testimony._id} 
+              className={`bg-background ${isFirst ? 'md:col-span-2 lg:col-span-2' : ''}`}
+            >
+              <TestimonyCard testimony={testimony} isFeatured={isFirst} />
+            </div>
+          );
+        })}
+      </div>
 
       {status === "CanLoadMore" && (
-        <div className="mt-8 flex justify-center">
-          <Button variant="outline" onClick={() => loadMore(20)}>
-            <ChevronDown className="mr-2 h-4 w-4" />
+        <div className="flex justify-center bg-background py-8 border-t border-border">
+          <button
+            onClick={() => loadMore(20)}
+            className="flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-foreground hover:text-primary transition-colors"
+          >
+            <ChevronDown className="h-4 w-4" />
             {t("loadMore")}
-          </Button>
+          </button>
         </div>
       )}
     </section>

@@ -3,15 +3,19 @@
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Sparkles } from "lucide-react";
+import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ReadingPrefsPopover } from "./ReadingPrefsPopover";
 
 interface VersionPanelProps {
+  testimonyId: string;
   originalText: string;
   originalLanguage: string;
   editedText: string;
   translatedText: Record<string, string>;
+  isFeatured?: boolean;
+  isFullPage?: boolean;
 }
 
 type Tab = "original" | "edited" | "translated";
@@ -24,10 +28,13 @@ const fontSizeClass: Record<FontSize, string> = {
 };
 
 export function VersionPanel({
+  testimonyId,
   originalText,
   originalLanguage,
   editedText,
   translatedText,
+  isFeatured = false,
+  isFullPage = false,
 }: VersionPanelProps) {
   const t = useTranslations("versionPanel");
   const locale = useLocale();
@@ -42,6 +49,29 @@ export function VersionPanel({
 
   const [fontSize, setFontSize] = useState<FontSize>("md");
   const [highContrast, setHighContrast] = useState(false);
+
+  const TRUNCATE_LENGTH = 350;
+
+  const renderText = (text: string) => {
+    if (isFullPage || text.length <= TRUNCATE_LENGTH) {
+      return text;
+    }
+    return text.slice(0, TRUNCATE_LENGTH).trim() + "...";
+  };
+
+  const ExpandButton = ({ textLength }: { textLength: number }) => {
+    if (isFullPage || textLength <= TRUNCATE_LENGTH) return null;
+    if (String(testimonyId).startsWith("placeholder")) return null;
+
+    return (
+      <Link
+        href={`/${locale}/story/${testimonyId}`}
+        className="mt-4 text-[10px] font-bold tracking-widest uppercase text-foreground hover:text-primary transition-colors inline-block border-b border-foreground pb-0.5"
+      >
+        [ Read full story ]
+      </Link>
+    );
+  };
 
   return (
     <div
@@ -72,23 +102,25 @@ export function VersionPanel({
         <TabsContent value="original" className="mt-0">
           <p
             lang={originalLanguage}
-            className={`story-text leading-relaxed ${fontSizeClass[fontSize]}`}
+            className={`story-text leading-relaxed ${isFeatured ? 'text-xl md:text-2xl' : fontSizeClass[fontSize]} first-letter:float-left first-letter:text-5xl first-letter:pr-2 first-letter:font-bold first-letter:font-display first-letter:leading-[0.8] first-line:tracking-wide`}
           >
-            {originalText}
+            {renderText(originalText)}
           </p>
+          <ExpandButton textLength={originalText.length} />
         </TabsContent>
 
         {hasEdited && (
           <TabsContent value="edited" className="mt-0">
             <p
               lang={originalLanguage}
-              className={`story-text leading-relaxed ${fontSizeClass[fontSize]}`}
+              className={`story-text leading-relaxed ${isFeatured ? 'text-xl md:text-2xl' : fontSizeClass[fontSize]} first-letter:float-left first-letter:text-5xl first-letter:pr-2 first-letter:font-bold first-letter:font-display first-letter:leading-[0.8] first-line:tracking-wide`}
             >
-              {editedText}
+              {renderText(editedText)}
             </p>
+            <ExpandButton textLength={editedText.length} />
             <Badge
               variant="outline"
-              className="mt-3 gap-1 text-xs text-muted-foreground"
+              className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
             >
               <Sparkles className="h-3 w-3" />
               {t("editedBadge")}
@@ -100,13 +132,14 @@ export function VersionPanel({
           <TabsContent value="translated" className="mt-0">
             <p
               lang={locale}
-              className={`story-text leading-relaxed ${fontSizeClass[fontSize]}`}
+              className={`story-text leading-relaxed ${isFeatured ? 'text-xl md:text-2xl' : fontSizeClass[fontSize]} first-letter:float-left first-letter:text-5xl first-letter:pr-2 first-letter:font-bold first-letter:font-display first-letter:leading-[0.8] first-line:tracking-wide`}
             >
-              {translatedText[locale]}
+              {renderText(translatedText[locale])}
             </p>
+            <ExpandButton textLength={translatedText[locale].length} />
             <Badge
               variant="outline"
-              className="mt-3 gap-1 text-xs text-muted-foreground"
+              className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
             >
               <Sparkles className="h-3 w-3" />
               {t("translatedBadge")}

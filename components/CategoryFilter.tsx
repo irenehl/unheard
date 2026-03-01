@@ -3,7 +3,6 @@
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback } from "react";
-import { Button } from "@/components/ui/button";
 
 const CATEGORIES = [
   "work",
@@ -41,58 +40,67 @@ export function CategoryFilter() {
   );
 
   return (
-    <div className="sticky top-[57px] z-40 border-b border-border bg-background/80 backdrop-blur-sm py-3 px-4">
-      <div className="mx-auto max-w-2xl space-y-3">
-        {/* Type filter */}
+    <div className="sticky top-0 z-40 bg-background border-b-[3px] border-foreground px-4 py-3 mb-8">
+      <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-4">
         <div
-          role="group"
+          role="tablist"
           aria-label={t("feed.filterAll")}
-          className="flex gap-2"
+          className="flex gap-6"
         >
           {(["all", "honor", "tell"] as TypeFilter[]).map((type) => (
-            <Button
+            <button
               key={type}
-              size="sm"
-              variant={activeType === type ? "secondary" : "ghost"}
-              aria-pressed={activeType === type}
-              onClick={() => updateParam("type", type === "all" ? null : type)}
-              className="text-xs"
+              role="tab"
+              aria-selected={activeType === type}
+              onClick={() =>
+                updateParam("type", type === "all" ? null : type)
+              }
+              className={`text-xs font-bold tracking-widest uppercase transition-colors ${
+                activeType === type
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               {t(
-                `feed.filter${type.charAt(0).toUpperCase() + type.slice(1)}` as any
+                `feed.filter${
+                  type.charAt(0).toUpperCase() + type.slice(1)
+                }`
               )}
-            </Button>
+            </button>
           ))}
         </div>
 
-        {/* Category chips */}
         <div
           role="group"
-          aria-label="Categorías"
-          className="flex overflow-x-auto gap-2 pb-1 scrollbar-hide"
+          aria-label={t("feed.categoriesLabel")}
+          className="flex flex-wrap justify-center gap-x-4 gap-y-2"
         >
-          <Button
-            size="sm"
-            variant={activeCategory === null ? "secondary" : "outline"}
+          <button
             aria-pressed={activeCategory === null}
             onClick={() => updateParam("category", null)}
-            className="shrink-0 text-xs"
+            className={`text-[10px] font-mono tracking-widest uppercase transition-colors ${
+              activeCategory === null
+                ? "text-primary font-bold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
-            {t("feed.filterAll")}
-          </Button>
+            [ {t("feed.filterAll")} ]
+          </button>
           {CATEGORIES.map((cat) => (
-            <Button
+            <button
               key={cat}
-              size="sm"
-              variant={activeCategory === cat ? "secondary" : "outline"}
               aria-pressed={activeCategory === cat}
               onClick={() =>
                 updateParam("category", activeCategory === cat ? null : cat)
               }
-              className="shrink-0 text-xs"
+              className={`text-[10px] font-mono tracking-widest uppercase transition-colors ${
+                activeCategory === cat
+                  ? "text-primary font-bold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
-              {t(`categories.${cat}`)}
-            </Button>
+              [ {t(`categories.${cat}`)} ]
+            </button>
           ))}
         </div>
       </div>
