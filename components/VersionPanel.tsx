@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
@@ -8,6 +8,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ReadingPrefsPopover } from "./ReadingPrefsPopover";
+import {
+  getStoredReadingPrefs,
+  setStoredReadingPrefs,
+  applyReadingPrefs,
+  DEFAULT_PREFS,
+  type FontSize,
+  type ReadingPrefs,
+} from "@/lib/readingPrefs";
+import { useShouldReduceMotion } from "@/lib/motionPrefs";
 
 interface VersionPanelProps {
   testimonyId: string;
@@ -20,13 +29,37 @@ interface VersionPanelProps {
 }
 
 type Tab = "original" | "edited" | "translated";
-type FontSize = "sm" | "md" | "lg";
 
-const fontSizeClass: Record<FontSize, string> = {
-  sm: "text-sm",
-  md: "text-base",
-  lg: "text-lg",
-};
+function subscribeReadingPrefs(callback: () => void) {
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", callback);
+    return () => window.removeEventListener("storage", callback);
+  }
+  return () => {};
+}
+
+// Cache the last snapshot to ensure stable references
+let cachedSnapshot: ReadingPrefs = DEFAULT_PREFS;
+let cachedSnapshotString: string = "";
+
+function getReadingPrefsSnapshot(): ReadingPrefs {
+  const current = getStoredReadingPrefs();
+  const currentString = JSON.stringify(current);
+  
+  // Return cached reference if values haven't changed
+  if (currentString === cachedSnapshotString) {
+    return cachedSnapshot;
+  }
+  
+  // Update cache with new values
+  cachedSnapshot = current;
+  cachedSnapshotString = currentString;
+  return cachedSnapshot;
+}
+
+function getServerSnapshot(): ReadingPrefs {
+  return DEFAULT_PREFS;
+}
 
 const TRUNCATE_LENGTH = 350;
 
@@ -51,8 +84,23 @@ export function VersionPanel({
   if (hasTranslation) availableTabs.push("translated");
 
   const [activeTab, setActiveTab] = useState<Tab>("original");
-  const [fontSize, setFontSize] = useState<FontSize>("md");
-  const [highContrast, setHighContrast] = useState(false);
+  const shouldReduceMotion = useShouldReduceMotion();
+  
+  // Use global reading preferences store
+  const prefs = useSyncExternalStore(
+    subscribeReadingPrefs,
+    getReadingPrefsSnapshot,
+    getServerSnapshot
+  );
+  
+  const updatePrefs = (updates: Partial<typeof prefs>) => {
+    const newPrefs = { ...prefs, ...updates };
+    setStoredReadingPrefs(newPrefs);
+    applyReadingPrefs(newPrefs);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("storage"));
+    }
+  };
 
   function renderText(text: string) {
     if (isFullPage || text.length <= TRUNCATE_LENGTH) return text;
@@ -72,8 +120,9 @@ export function VersionPanel({
     );
   }
 
+  // For featured stories, use larger text; otherwise rely on global font-size via CSS
   const textClass = `story-text leading-relaxed ${
-    isFeatured ? "text-xl md:text-2xl" : fontSizeClass[fontSize]
+    isFeatured ? "text-xl md:text-2xl" : ""
   } first-letter:float-left first-letter:text-5xl first-letter:pr-2 first-letter:font-bold first-letter:font-display first-letter:leading-[0.8] first-line:tracking-wide`;
 
   const contentMap: Record<Tab, React.ReactNode> = {
@@ -118,7 +167,7 @@ export function VersionPanel({
   };
 
   return (
-    <div data-font-size={fontSize} data-high-contrast={highContrast}>
+    <div>
       {/* Tab bar */}
       <Tabs
         value={activeTab}
@@ -136,9 +185,9 @@ export function VersionPanel({
                 {/* Sliding underline indicator */}
                 {activeTab === tab && (
                   <motion.span
-                    layoutId={`tab-underline-${testimonyId}`}
+                    layoutId={shouldReduceMotion ? undefined : `tab-underline-${testimonyId}`}
                     className="absolute bottom-0 inset-x-0 h-[2px] bg-primary"
-                    transition={{
+                    transition={shouldReduceMotion ? { duration: 0 } : {
                       type: "spring",
                       bounce: 0.15,
                       duration: 0.35,
@@ -150,12 +199,18 @@ export function VersionPanel({
           </TabsList>
 
           {availableTabs.length > 1 && (
-            <ReadingPrefsPopover
-              fontSize={fontSize}
-              highContrast={highContrast}
-              onFontSize={setFontSize}
-              onHighContrast={setHighContrast}
-            />
+            <div className="ml-auto">
+              <ReadingPrefsPopover
+                fontSize={prefs.fontSize}
+                highContrast={prefs.highContrast}
+                reduceMotion={prefs.reduceMotion}
+                reduceTexture={prefs.reduceTexture}
+                onFontSize={(size: FontSize) => updatePrefs({ fontSize: size })}
+                onHighContrast={(on: boolean) => updatePrefs({ highContrast: on })}
+                onReduceMotion={(on: boolean) => updatePrefs({ reduceMotion: on })}
+                onReduceTexture={(on: boolean) => updatePrefs({ reduceTexture: on })}
+              />
+            </div>
           )}
         </div>
       </Tabs>
@@ -170,8 +225,8 @@ export function VersionPanel({
           <motion.div
             key={activeTab}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1, transition: { duration: 0.2, delay: 0.05 } }}
-            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            animate={{ opacity: 1, transition: shouldReduceMotion ? { duration: 0 } : { duration: 0.2, delay: 0.05 } }}
+            exit={{ opacity: 0, transition: { duration: shouldReduceMotion ? 0 : 0.15 } }}
           >
             {contentMap[activeTab]}
           </motion.div>

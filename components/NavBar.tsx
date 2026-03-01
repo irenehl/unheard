@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
+import { ReadingPrefsGlobal } from "./ReadingPrefsGlobal";
 
 export async function NavBar({ locale }: { locale: string }) {
   const { sessionClaims } = await auth();
@@ -76,6 +77,7 @@ export async function NavBar({ locale }: { locale: string }) {
           </nav>
 
           <div className="flex items-center gap-6">
+            <ReadingPrefsGlobal />
             <ThemeToggle />
             <LocaleSwitcher />
             {isSignedIn ? (

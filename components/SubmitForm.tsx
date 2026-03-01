@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Loader2, CheckCircle2, Heart, Mic } from "lucide-react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useShouldReduceMotion } from "@/lib/motionPrefs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -56,6 +57,7 @@ const shakeVariants: Variants = {
 export function SubmitForm() {
   const t = useTranslations("submit");
   const tCat = useTranslations("categories");
+  const shouldReduceMotion = useShouldReduceMotion();
 
   const [type, setType] = useState<Type>("honor");
   const [category, setCategory] = useState<Category>("work");
@@ -64,6 +66,8 @@ export function SubmitForm() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorKey, setErrorKey] = useState(0);
+  
+  const transitionDuration = shouldReduceMotion ? 0 : undefined;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -96,13 +100,13 @@ export function SubmitForm() {
           aria-live="polite"
           className="flex flex-col items-center gap-8 py-24 text-center"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: 0.3 } }}
-          exit={{ opacity: 0, transition: { duration: 0.2 } }}
+          animate={{ opacity: 1, transition: { duration: transitionDuration ?? 0.3 } }}
+          exit={{ opacity: 0, transition: { duration: transitionDuration ?? 0.2 } }}
         >
           <motion.div
             initial={{ scale: 0.7, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3, ease: [0.25, 0, 0, 1], delay: 0.1 }}
+            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.3, ease: [0.25, 0, 0, 1], delay: 0.1 }}
           >
             <CheckCircle2 className="h-10 w-10 text-primary" />
           </motion.div>
@@ -137,13 +141,13 @@ export function SubmitForm() {
           onSubmit={handleSubmit}
           noValidate
           className="space-y-12"
-          variants={formVariants}
+          variants={shouldReduceMotion ? { hidden: {}, visible: {} } : formVariants}
           initial="hidden"
           animate="visible"
-          exit={{ opacity: 0, transition: { duration: 0.15 } }}
+          exit={{ opacity: 0, transition: { duration: transitionDuration ?? 0.15 } }}
         >
           {/* Type selector */}
-          <motion.fieldset variants={fieldVariants} className="space-y-4">
+          <motion.fieldset variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants} className="space-y-4">
             <legend className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground mb-4 block">
               {t("typeLabel")}
             </legend>
@@ -208,7 +212,7 @@ export function SubmitForm() {
           </motion.fieldset>
 
           {/* Category */}
-          <motion.div variants={fieldVariants} className="space-y-3">
+          <motion.div variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants} className="space-y-3">
             <Label
               htmlFor="category"
               className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground"
@@ -240,7 +244,7 @@ export function SubmitForm() {
           </motion.div>
 
           {/* Story text */}
-          <motion.div variants={fieldVariants} className="space-y-3">
+          <motion.div variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants} className="space-y-3">
             <Label
               htmlFor="story-text"
               className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground flex justify-between items-end"
@@ -270,7 +274,7 @@ export function SubmitForm() {
           </motion.div>
 
           {/* Author name */}
-          <motion.div variants={fieldVariants} className="space-y-3">
+          <motion.div variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants} className="space-y-3">
             <Label
               htmlFor="author-name"
               className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground"
@@ -290,7 +294,7 @@ export function SubmitForm() {
 
           {/* Anonymous toggle */}
           <motion.div
-            variants={fieldVariants}
+            variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants}
             className="flex items-center gap-4 p-4 border border-border bg-accent/30"
           >
             <Checkbox
@@ -309,7 +313,7 @@ export function SubmitForm() {
 
           {/* AI notice */}
           <motion.div
-            variants={fieldVariants}
+            variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants}
             className="border-l-2 border-foreground/20 pl-5 py-2"
           >
             <p className="font-mono text-[0.65rem] tracking-widest uppercase text-muted-foreground/80 leading-relaxed">
@@ -322,8 +326,8 @@ export function SubmitForm() {
             {status === "error" && (
               <motion.div
                 key={errorKey}
-                variants={shakeVariants}
-                animate="shake"
+                variants={shouldReduceMotion ? {} : shakeVariants}
+                animate={shouldReduceMotion ? undefined : "shake"}
               >
                 <Alert variant="destructive">
                   <AlertDescription>{t("errorGeneric")}</AlertDescription>
@@ -334,7 +338,7 @@ export function SubmitForm() {
 
           {/* Submit button */}
           <motion.div variants={fieldVariants}>
-            <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}>
+            <motion.div whileTap={shouldReduceMotion ? undefined : { scale: 0.97, transition: { duration: 0.1 } }}>
               <Button
                 type="submit"
                 disabled={status === "submitting" || !text.trim()}
@@ -347,8 +351,8 @@ export function SubmitForm() {
                       key="loading"
                       className="flex items-center"
                       initial={{ opacity: 0 }}
-                      animate={{ opacity: 1, transition: { duration: 0.15 } }}
-                      exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                      animate={{ opacity: 1, transition: { duration: transitionDuration ?? 0.15 } }}
+                      exit={{ opacity: 0, transition: { duration: transitionDuration ?? 0.1 } }}
                     >
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
                       {t("submitting")}
@@ -357,8 +361,8 @@ export function SubmitForm() {
                     <motion.span
                       key="idle"
                       initial={{ opacity: 0 }}
-                      animate={{ opacity: 1, transition: { duration: 0.15 } }}
-                      exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                      animate={{ opacity: 1, transition: { duration: transitionDuration ?? 0.15 } }}
+                      exit={{ opacity: 0, transition: { duration: transitionDuration ?? 0.1 } }}
                     >
                       {t("submitButton")}
                     </motion.span>

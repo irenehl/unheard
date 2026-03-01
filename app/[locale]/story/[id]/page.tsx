@@ -6,6 +6,79 @@ import { Id } from "@/convex/_generated/dataModel";
 import { VersionPanel } from "@/components/VersionPanel";
 import { Heart, Mic } from "lucide-react";
 import Link from "next/link";
+import type { Metadata } from "next";
+import { cache } from "react";
+
+// Cache the testimony fetch to avoid double-fetching in generateMetadata and page component
+const getTestimony = cache(async (id: Id<"testimonies">) => {
+  return await fetchQuery(api.testimonies.getById, { id });
+});
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
+  const { locale, id } = await params;
+
+  if (id.startsWith("placeholder")) {
+    return {
+      title: "Story not found",
+    };
+  }
+
+  const testimony = await getTestimony(id as Id<"testimonies">);
+
+  if (!testimony || testimony.status !== "published") {
+    return {
+      title: "Story not found",
+    };
+  }
+
+  // Load translations for metadata
+  const messages = (await import(`@/messages/${locale}.json`)).default;
+  const t = (key: string) => {
+    const keys = key.split(".");
+    let value: any = messages;
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    return value || key;
+  };
+
+  const categoryLabel = t(`categories.${testimony.category}`);
+  const storyTitle = `${t("common.storyOf")} ${categoryLabel}`;
+  
+  // Create a safe description from the testimony text (first 160 chars)
+  const textForDescription = testimony.translatedText[locale] || testimony.editedText || testimony.originalText;
+  const description = textForDescription.length > 160
+    ? textForDescription.substring(0, 157) + "..."
+    : textForDescription;
+
+  const siteUrl = process.env.SITE_URL || "https://example.com";
+  const url = `${siteUrl}/${locale}/story/${id}`;
+
+  return {
+    title: storyTitle,
+    description: description,
+    alternates: {
+      canonical: `/${locale}/story/${id}`,
+    },
+    openGraph: {
+      title: storyTitle,
+      description: description,
+      url: url,
+      locale: locale,
+      type: "article",
+      publishedTime: new Date(testimony.createdAt).toISOString(),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: storyTitle,
+      description: description,
+    },
+  };
+}
 
 export default async function StoryPage({
   params,
@@ -19,11 +92,9 @@ export default async function StoryPage({
     notFound();
   }
 
-  const testimony = await fetchQuery(api.testimonies.getById, {
-    id: id as Id<"testimonies">,
-  });
+  const testimony = await getTestimony(id as Id<"testimonies">);
 
-  if (!testimony) {
+  if (!testimony || testimony.status !== "published") {
     notFound();
   }
 
@@ -44,9 +115,40 @@ export default async function StoryPage({
 
   const isHonor = testimony.type === "honor";
 
+  const siteUrl = process.env.SITE_URL || "https://example.com";
+  const url = `${siteUrl}/${locale}/story/${id}`;
+  const categoryLabel = t(`categories.${testimony.category}`);
+  const storyTitle = `${t("common.storyOf")} ${categoryLabel}`;
+  const authorName = testimony.isAnonymous
+    ? t("feed.anonymous")
+    : testimony.authorName ?? t("feed.anonymous");
+
+  // JSON-LD structured data for Article
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: storyTitle,
+    datePublished: new Date(testimony.createdAt).toISOString(),
+    author: {
+      "@type": "Person",
+      name: authorName,
+    },
+    inLanguage: locale,
+    url: url,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": url,
+    },
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="border-t-[3px] border-foreground mt-8 mb-12 max-w-4xl mx-auto" />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       <article className="mx-auto max-w-3xl px-6 sm:px-8">
         <Link

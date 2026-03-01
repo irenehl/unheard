@@ -1,6 +1,41 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
 import { SubmitForm } from "@/components/SubmitForm";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  // Load translations for the submit namespace
+  const messages = (await import(`@/messages/${locale}.json`)).default;
+  const submitMessages = messages.submit as {
+    title: string;
+    intro: string;
+  };
+
+  const siteUrl = process.env.SITE_URL || "https://example.com";
+
+  return {
+    title: submitMessages.title,
+    description: submitMessages.intro,
+    alternates: {
+      canonical: `/${locale}/submit`,
+    },
+    openGraph: {
+      title: submitMessages.title,
+      description: submitMessages.intro,
+      url: `/${locale}/submit`,
+      locale: locale,
+    },
+    twitter: {
+      title: submitMessages.title,
+      description: submitMessages.intro,
+    },
+  };
+}
 
 export default async function SubmitPage() {
   const [t, tNav, locale] = await Promise.all([

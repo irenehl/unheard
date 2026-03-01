@@ -53,7 +53,9 @@
     "fontSmall": "Small",
     "fontMedium": "Medium",
     "fontLarge": "Large",
-    "highContrast": "High contrast"
+    "highContrast": "High contrast",
+    "reduceMotion": "Reduce motion",
+    "reduceTexture": "Reduce texture"
   },
   "submit": {
     "title": "Share a story",

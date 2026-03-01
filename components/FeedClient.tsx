@@ -9,6 +9,7 @@ import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { TestimonyCard } from "./TestimonyCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useShouldReduceMotion } from "@/lib/motionPrefs";
 
 type Category =
   | "work"
@@ -58,6 +59,7 @@ const itemVariants: Variants = {
 export function FeedClient() {
   const t = useTranslations("feed");
   const searchParams = useSearchParams();
+  const shouldReduceMotion = useShouldReduceMotion();
 
   const typeParam = searchParams.get("type") as "honor" | "tell" | null;
   const categoryParam = searchParams.get("category") as Category | null;
@@ -71,6 +73,8 @@ export function FeedClient() {
     },
     { initialNumItems: 20 }
   );
+  
+  const transitionDuration = shouldReduceMotion ? 0 : undefined;
 
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -79,8 +83,8 @@ export function FeedClient() {
         <motion.div
           key={`skeleton-${filterKey}`}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: 0.2 } }}
-          exit={{ opacity: 0, transition: { duration: 0.15 } }}
+          animate={{ opacity: 1, transition: { duration: transitionDuration ?? 0.2 } }}
+          exit={{ opacity: 0, transition: { duration: transitionDuration ?? 0.15 } }}
           aria-busy="true"
           aria-live="polite"
           className="border-t-[3px] border-b-[3px] border-foreground mt-8 mb-12"
@@ -103,8 +107,8 @@ export function FeedClient() {
           key={`empty-${filterKey}`}
           aria-label={t("title")}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: 0.25 } }}
-          exit={{ opacity: 0, transition: { duration: 0.15 } }}
+          animate={{ opacity: 1, transition: { duration: transitionDuration ?? 0.25 } }}
+          exit={{ opacity: 0, transition: { duration: transitionDuration ?? 0.15 } }}
           className="border-t-[3px] border-b-[3px] border-foreground mt-8 mb-12"
         >
           <div className="py-20 text-center">
@@ -116,7 +120,7 @@ export function FeedClient() {
         <motion.section
           key={`results-${filterKey}`}
           aria-label={t("title")}
-          variants={containerVariants}
+          variants={shouldReduceMotion ? { hidden: {}, visible: {}, exit: {} } : containerVariants}
           initial="hidden"
           animate="visible"
           exit="exit"
@@ -128,7 +132,7 @@ export function FeedClient() {
               return (
                 <motion.div
                   key={testimony._id}
-                  variants={itemVariants}
+                  variants={shouldReduceMotion ? { hidden: {}, visible: {} } : itemVariants}
                   className={`bg-background ${isFirst ? "md:col-span-2 lg:col-span-2" : ""}`}
                 >
                   <TestimonyCard

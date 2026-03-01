@@ -2,6 +2,36 @@ import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { FeedClient } from "@/components/FeedClient";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale });
+
+  const siteUrl = process.env.SITE_URL || "https://example.com";
+
+  return {
+    title: t("feed.title"),
+    description: t("landing.tagline"),
+    alternates: {
+      canonical: `/${locale}`,
+    },
+    openGraph: {
+      title: t("feed.title"),
+      description: t("landing.tagline"),
+      url: `/${locale}`,
+      locale: locale,
+    },
+    twitter: {
+      title: t("feed.title"),
+      description: t("landing.tagline"),
+    },
+  };
+}
 
 export default async function FeedPage() {
   const [t, locale] = await Promise.all([getTranslations(), getLocale()]);

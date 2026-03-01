@@ -125,7 +125,21 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Default font size (medium) */
+    font-size: 16px;
   }
+  
+  /* Global font size scaling */
+  html[data-font-size="sm"] {
+    font-size: 15px;
+  }
+  html[data-font-size="md"] {
+    font-size: 16px;
+  }
+  html[data-font-size="lg"] {
+    font-size: 18px;
+  }
+  
   * {
     @apply border-border outline-ring/50;
   }
@@ -143,6 +157,11 @@
     pointer-events: none;
     background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='1'/></svg>");
     opacity: 0.028;
+  }
+  
+  /* Reduce texture — remove overlays */
+  html[data-reduce-texture="true"] body::after {
+    opacity: 0 !important;
   }
 
   /* ── Accessibility: Focus indicators ──────────────────────────── */
@@ -192,6 +211,32 @@
   }
 }
 
+html[data-reduce-motion="true"] {
+  scroll-behavior: auto;
+}
+
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Disable archive reveal animations */
+html[data-reduce-motion="true"] .anim-0,
+html[data-reduce-motion="true"] .anim-1,
+html[data-reduce-motion="true"] .anim-2,
+html[data-reduce-motion="true"] .anim-3 {
+  animation: none !important;
+}
+
+/* Reduce film grain opacity for reduced motion */
+html[data-reduce-motion="true"] body::after {
+  opacity: 0.01;
+}
+
 /* ── Archive reveal animations ──────────────────────────────── */
 @keyframes archiveReveal {
   from {
@@ -235,7 +280,7 @@
   display: none;
 }
 
-/* ── Reading prefs: font size custom props ───────────────────── */
-[data-font-size="sm"] .story-text { font-size: 0.875rem; }
-[data-font-size="lg"] .story-text { font-size: 1.125rem; }
-[data-high-contrast="true"] { filter: contrast(1.12); }
+/* ── Reading prefs: high contrast ───────────────────── */
+html[data-high-contrast="true"] {
+  filter: contrast(1.12);
+}

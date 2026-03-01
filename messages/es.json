@@ -53,7 +53,9 @@
     "fontSmall": "Pequeño",
     "fontMedium": "Mediano",
     "fontLarge": "Grande",
-    "highContrast": "Alto contraste"
+    "highContrast": "Alto contraste",
+    "reduceMotion": "Reducir movimiento",
+    "reduceTexture": "Reducir textura"
   },
   "submit": {
     "title": "Contar una historia",
