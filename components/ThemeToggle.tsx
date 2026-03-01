@@ -19,7 +19,7 @@ function getThemeSnapshot(): Theme {
 
 export function ThemeToggle() {
   const t = useTranslations("common");
-  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => "dark");
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => "light");
 
   const toggleTheme = () => {
     const newTheme: Theme = theme === "light" ? "dark" : "light";

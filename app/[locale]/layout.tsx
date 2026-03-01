@@ -4,6 +4,7 @@ import { getMessages, getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import { NavBar } from "@/components/NavBar";
+import { PageTransition } from "@/components/PageTransition";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -36,7 +37,9 @@ export default async function LocaleLayout({
           </header>
 
           <main id="main-content" tabIndex={-1}>
-            {children}
+            <PageTransition>
+              {children}
+            </PageTransition>
           </main>
 
           <footer className="mt-20 border-t border-border py-10 px-6 text-center">

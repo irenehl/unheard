@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Flag, Heart, Mic } from "lucide-react";
+import { motion } from "framer-motion";
 import { api } from "@/convex/_generated/api";
 import { useMutation } from "convex/react";
 import { Doc } from "@/convex/_generated/dataModel";
@@ -40,7 +41,18 @@ export function TestimonyCard({
   const isHonor = testimony.type === "honor";
 
   return (
-    <article className="p-8 md:p-10 group h-full flex flex-col">
+    <motion.article
+      className="p-8 md:p-10 group h-full flex flex-col"
+      /* scroll reveal — fires once when card enters viewport */
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.45, ease: [0.25, 0, 0, 1] }}
+      /* hover lift — translateY only, shadow via CSS on article */
+      whileHover={{ y: -2 }}
+      /* press scale */
+      whileTap={{ scale: 0.99 }}
+    >
       <header className="mb-5 border-b border-border pb-3">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-foreground">
@@ -50,14 +62,15 @@ export function TestimonyCard({
               {formattedDate}
             </time>
           </div>
-          
+
           <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-muted-foreground">
             <span className={isHonor ? "text-primary" : ""}>
               {t(typeKey)}
             </span>
             <span>·</span>
             <span>
-              {t("feed.postedBy")} <span className="text-foreground">{displayName}</span>
+              {t("feed.postedBy")}{" "}
+              <span className="text-foreground">{displayName}</span>
             </span>
           </div>
         </div>
@@ -88,6 +101,6 @@ export function TestimonyCard({
           </Button>
         )}
       </footer>
-    </article>
+    </motion.article>
   );
 }

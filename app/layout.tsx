@@ -52,7 +52,9 @@ export default async function RootLayout({
               (function() {
                 try {
                   const theme = localStorage.getItem('theme');
-                  if (theme === 'light') {
+                  if (theme === 'dark') {
+                    document.documentElement.classList.remove('light');
+                  } else {
                     document.documentElement.classList.add('light');
                   }
                 } catch (e) {}

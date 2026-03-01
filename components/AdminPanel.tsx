@@ -6,6 +6,7 @@ import { usePaginatedQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { ChevronDown } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -35,96 +36,121 @@ export function AdminPanel() {
   const setStatusMutation = useMutation(api.testimonies.setStatus);
 
   const [confirmId, setConfirmId] = useState<Id<"testimonies"> | null>(null);
+  /** Track IDs being removed so we can animate them out before Convex updates */
+  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
 
   async function handleRemove() {
     if (!confirmId) return;
-    await setStatusMutation({ id: confirmId, status: "removed" });
+    setRemovingIds((prev) => new Set([...prev, confirmId]));
     setConfirmId(null);
+    // Give the opacity animation time to play, then commit
+    setTimeout(() => {
+      setStatusMutation({ id: confirmId, status: "removed" });
+    }, 200);
   }
 
   return (
     <div className="space-y-6">
       <h1
-        className="font-serif text-3xl font-semibold text-foreground"
-        style={{ fontFamily: "var(--font-serif), Georgia, serif" }}
+        style={{ fontFamily: "var(--font-display), var(--font-serif), Georgia, serif" }}
+        className="text-3xl text-foreground"
       >
         {t("title")}
       </h1>
 
       {status === "LoadingFirstPage" && (
-        <div aria-busy="true" aria-live="polite" className="text-muted-foreground text-sm">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-muted-foreground text-sm"
+          aria-busy="true"
+          aria-live="polite"
+        >
           Cargando…
-        </div>
+        </motion.p>
       )}
 
       <ol aria-label={t("title")} className="space-y-4">
-        {results.map((testimony) => {
-          const isPublished = testimony.status === "published";
-          const flagCount = testimony.flagCount ?? 0;
+        <AnimatePresence initial={false}>
+          {results.map((testimony) => {
+            const isPublished = testimony.status === "published";
+            const flagCount = testimony.flagCount ?? 0;
+            const isRemoving = removingIds.has(testimony._id);
 
-          return (
-            <li key={testimony._id}>
-              <Card>
-                <CardHeader className="pb-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="outline" className="capitalize">
-                      {testimony.type}
-                    </Badge>
-                    <Badge variant="outline" className="capitalize">
-                      {testimony.category}
-                    </Badge>
-                    <Badge
-                      variant={isPublished ? "default" : "secondary"}
-                      className={
-                        isPublished
-                          ? "bg-primary/20 text-primary border-primary/30"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      {isPublished ? t("statusPublished") : t("statusRemoved")}
-                    </Badge>
-                    {flagCount > 0 && (
-                      <Badge variant="destructive">
-                        {t("flagCount", { count: flagCount })}
+            return (
+              <motion.li
+                key={testimony._id}
+                layout
+                initial={{ opacity: 0, y: 8 }}
+                animate={
+                  isRemoving
+                    ? { opacity: 0, transition: { duration: 0.2 } }
+                    : { opacity: 1, y: 0, transition: { duration: 0.3 } }
+                }
+                exit={{ opacity: 0, height: 0, marginBottom: 0, transition: { opacity: { duration: 0.2 }, height: { duration: 0.2, delay: 0.2 } } }}
+              >
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline" className="capitalize">
+                        {testimony.type}
                       </Badge>
+                      <Badge variant="outline" className="capitalize">
+                        {testimony.category}
+                      </Badge>
+                      <Badge
+                        variant={isPublished ? "default" : "secondary"}
+                        className={
+                          isPublished
+                            ? "bg-primary/20 text-primary border-primary/30"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        {isPublished ? t("statusPublished") : t("statusRemoved")}
+                      </Badge>
+                      {flagCount > 0 && (
+                        <Badge variant="destructive">
+                          {t("flagCount", { count: flagCount })}
+                        </Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-foreground line-clamp-4">
+                      {testimony.originalText}
+                    </p>
+                  </CardContent>
+                  <CardFooter className="gap-2 justify-end">
+                    {isPublished ? (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() =>
+                          setConfirmId(testimony._id as Id<"testimonies">)
+                        }
+                      >
+                        {t("remove")}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setStatusMutation({
+                            id: testimony._id as Id<"testimonies">,
+                            status: "published",
+                          })
+                        }
+                      >
+                        {t("restore")}
+                      </Button>
                     )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-foreground line-clamp-4">
-                    {testimony.originalText}
-                  </p>
-                </CardContent>
-                <CardFooter className="gap-2 justify-end">
-                  {isPublished ? (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() =>
-                        setConfirmId(testimony._id as Id<"testimonies">)
-                      }
-                    >
-                      {t("remove")}
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setStatusMutation({
-                          id: testimony._id as Id<"testimonies">,
-                          status: "published",
-                        })
-                      }
-                    >
-                      {t("restore")}
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
-            </li>
-          );
-        })}
+                  </CardFooter>
+                </Card>
+              </motion.li>
+            );
+          })}
+        </AnimatePresence>
       </ol>
 
       {status === "CanLoadMore" && (

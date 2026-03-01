@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AnimatePresence, motion } from "framer-motion";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ReadingPrefsPopover } from "./ReadingPrefsPopover";
 
@@ -27,6 +28,8 @@ const fontSizeClass: Record<FontSize, string> = {
   lg: "text-lg",
 };
 
+const TRUNCATE_LENGTH = 350;
+
 export function VersionPanel({
   testimonyId,
   originalText,
@@ -47,22 +50,18 @@ export function VersionPanel({
   if (hasEdited) availableTabs.push("edited");
   if (hasTranslation) availableTabs.push("translated");
 
+  const [activeTab, setActiveTab] = useState<Tab>("original");
   const [fontSize, setFontSize] = useState<FontSize>("md");
   const [highContrast, setHighContrast] = useState(false);
 
-  const TRUNCATE_LENGTH = 350;
+  function renderText(text: string) {
+    if (isFullPage || text.length <= TRUNCATE_LENGTH) return text;
+    return text.slice(0, TRUNCATE_LENGTH).trim() + "…";
+  }
 
-  const renderText = (text: string) => {
-    if (isFullPage || text.length <= TRUNCATE_LENGTH) {
-      return text;
-    }
-    return text.slice(0, TRUNCATE_LENGTH).trim() + "...";
-  };
-
-  const ExpandButton = ({ textLength }: { textLength: number }) => {
+  function ExpandLink({ textLength }: { textLength: number }) {
     if (isFullPage || textLength <= TRUNCATE_LENGTH) return null;
     if (String(testimonyId).startsWith("placeholder")) return null;
-
     return (
       <Link
         href={`/${locale}/story/${testimonyId}`}
@@ -71,82 +70,113 @@ export function VersionPanel({
         [ Read full story ]
       </Link>
     );
+  }
+
+  const textClass = `story-text leading-relaxed ${
+    isFeatured ? "text-xl md:text-2xl" : fontSizeClass[fontSize]
+  } first-letter:float-left first-letter:text-5xl first-letter:pr-2 first-letter:font-bold first-letter:font-display first-letter:leading-[0.8] first-line:tracking-wide`;
+
+  const contentMap: Record<Tab, React.ReactNode> = {
+    original: (
+      <>
+        <p lang={originalLanguage} className={textClass}>
+          {renderText(originalText)}
+        </p>
+        <ExpandLink textLength={originalText.length} />
+      </>
+    ),
+    edited: (
+      <>
+        <p lang={originalLanguage} className={textClass}>
+          {renderText(editedText)}
+        </p>
+        <ExpandLink textLength={editedText.length} />
+        <Badge
+          variant="outline"
+          className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
+        >
+          <Sparkles className="h-3 w-3" />
+          {t("editedBadge")}
+        </Badge>
+      </>
+    ),
+    translated: (
+      <>
+        <p lang={locale} className={textClass}>
+          {renderText(translatedText[locale] ?? "")}
+        </p>
+        <ExpandLink textLength={(translatedText[locale] ?? "").length} />
+        <Badge
+          variant="outline"
+          className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
+        >
+          <Sparkles className="h-3 w-3" />
+          {t("translatedBadge")}
+        </Badge>
+      </>
+    ),
   };
 
   return (
-    <div
-      data-font-size={fontSize}
-      data-high-contrast={highContrast}
-    >
-      <Tabs defaultValue="original">
-        <div className="flex items-center gap-2 mb-3">
-          <TabsList className="h-auto bg-transparent p-0 gap-3">
+    <div data-font-size={fontSize} data-high-contrast={highContrast}>
+      {/* Tab bar */}
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as Tab)}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <TabsList className="relative h-auto bg-transparent p-0 gap-4">
             {availableTabs.map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="rounded-none border-b-2 border-transparent px-0 pb-1 text-sm font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none bg-transparent"
+                className="relative rounded-none border-b-2 border-transparent px-0 pb-1 text-[10px] font-bold tracking-widest uppercase text-muted-foreground data-[state=active]:text-foreground data-[state=active]:border-transparent data-[state=active]:shadow-none bg-transparent transition-colors duration-200"
               >
                 {t(tab)}
+                {/* Sliding underline indicator */}
+                {activeTab === tab && (
+                  <motion.span
+                    layoutId={`tab-underline-${testimonyId}`}
+                    className="absolute bottom-0 inset-x-0 h-[2px] bg-primary"
+                    transition={{
+                      type: "spring",
+                      bounce: 0.15,
+                      duration: 0.35,
+                    }}
+                  />
+                )}
               </TabsTrigger>
             ))}
           </TabsList>
-          <ReadingPrefsPopover
-            fontSize={fontSize}
-            highContrast={highContrast}
-            onFontSize={setFontSize}
-            onHighContrast={setHighContrast}
-          />
+
+          {availableTabs.length > 1 && (
+            <ReadingPrefsPopover
+              fontSize={fontSize}
+              highContrast={highContrast}
+              onFontSize={setFontSize}
+              onHighContrast={setHighContrast}
+            />
+          )}
         </div>
-
-        <TabsContent value="original" className="mt-0">
-          <p
-            lang={originalLanguage}
-            className={`story-text leading-relaxed ${isFeatured ? 'text-xl md:text-2xl' : fontSizeClass[fontSize]} first-letter:float-left first-letter:text-5xl first-letter:pr-2 first-letter:font-bold first-letter:font-display first-letter:leading-[0.8] first-line:tracking-wide`}
-          >
-            {renderText(originalText)}
-          </p>
-          <ExpandButton textLength={originalText.length} />
-        </TabsContent>
-
-        {hasEdited && (
-          <TabsContent value="edited" className="mt-0">
-            <p
-              lang={originalLanguage}
-              className={`story-text leading-relaxed ${isFeatured ? 'text-xl md:text-2xl' : fontSizeClass[fontSize]} first-letter:float-left first-letter:text-5xl first-letter:pr-2 first-letter:font-bold first-letter:font-display first-letter:leading-[0.8] first-line:tracking-wide`}
-            >
-              {renderText(editedText)}
-            </p>
-            <ExpandButton textLength={editedText.length} />
-            <Badge
-              variant="outline"
-              className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
-            >
-              <Sparkles className="h-3 w-3" />
-              {t("editedBadge")}
-            </Badge>
-          </TabsContent>
-        )}
-
-        {hasTranslation && (
-          <TabsContent value="translated" className="mt-0">
-            <p
-              lang={locale}
-              className={`story-text leading-relaxed ${isFeatured ? 'text-xl md:text-2xl' : fontSizeClass[fontSize]} first-letter:float-left first-letter:text-5xl first-letter:pr-2 first-letter:font-bold first-letter:font-display first-letter:leading-[0.8] first-line:tracking-wide`}
-            >
-              {renderText(translatedText[locale])}
-            </p>
-            <ExpandButton textLength={translatedText[locale].length} />
-            <Badge
-              variant="outline"
-              className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
-            >
-              <Sparkles className="h-3 w-3" />
-              {t("translatedBadge")}
-            </Badge>
-          </TabsContent>
-        )}
       </Tabs>
+
+      {/* Content — AnimatePresence cross-fade between tabs */}
+      <div
+        role="tabpanel"
+        aria-label={t(activeTab)}
+        tabIndex={0}
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.2, delay: 0.05 } }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+          >
+            {contentMap[activeTab]}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
