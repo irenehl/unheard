@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "submit": "Contar una historia",
+    "admin": "Administración"
+  },
+  "feed": {
+    "title": "Ellas",
+    "tagline": "Historias de mujeres que el mundo nunca documentó.",
+    "filterAll": "Todas",
+    "filterHonor": "Homenaje",
+    "filterTell": "Mi historia",
+    "empty": "Todavía no hay historias aquí. Sé la primera en compartir.",
+    "loadMore": "Ver más",
+    "postedBy": "Compartido por",
+    "anonymous": "Anónima",
+    "typeHonor": "Homenaje",
+    "typeTell": "Mi historia"
+  },
+  "categories": {
+    "work": "Trabajo",
+    "family": "Familia",
+    "health": "Salud",
+    "love": "Amor",
+    "money": "Dinero",
+    "education": "Educación",
+    "courage": "Valentía"
+  },
+  "versionPanel": {
+    "original": "Original",
+    "edited": "Corregido",
+    "translated": "Traducido",
+    "editedBadge": "Ortografía corregida por IA",
+    "translatedBadge": "Traducido por IA"
+  },
+  "readingPrefs": {
+    "label": "Preferencias de lectura",
+    "fontSize": "Tamaño de texto",
+    "fontSmall": "Pequeño",
+    "fontMedium": "Mediano",
+    "fontLarge": "Grande",
+    "highContrast": "Alto contraste"
+  },
+  "submit": {
+    "title": "Contar una historia",
+    "typeLabel": "¿Qué tipo de historia es?",
+    "typeHonor": "Homenaje — la historia de alguien más",
+    "typeHonorDesc": "Para honrar a una mujer que admiras. Ella no necesita saberlo.",
+    "typeTell": "Mi historia — un momento mío",
+    "typeTellDesc": "Para documentar un hito que no aparece en ningún currículum.",
+    "categoryLabel": "Categoría",
+    "textLabel": "La historia",
+    "textPlaceholder": "Escribe aquí, en cualquier idioma. Tu voz es lo que importa.",
+    "authorNameLabel": "¿Cómo quieres aparecer? (opcional)",
+    "authorNamePlaceholder": "Tu nombre o apodo",
+    "anonymousLabel": "Publicar de forma anónima",
+    "submitButton": "Publicar historia",
+    "submitting": "Publicando…",
+    "successTitle": "Historia publicada",
+    "successMessage": "Gracias por dar voz a esta historia.",
+    "errorGeneric": "Algo salió mal. Intenta de nuevo.",
+    "processingNotice": "Tu historia se procesará con IA para detectar el idioma, corregir ortografía y generar traducciones. Tu voz original se preserva siempre."
+  },
+  "admin": {
+    "title": "Panel de administración",
+    "statusPublished": "Publicado",
+    "statusRemoved": "Eliminado",
+    "remove": "Eliminar",
+    "restore": "Restaurar",
+    "flagCount": "{count, plural, one {# reporte} other {# reportes}}",
+    "confirmRemove": "¿Eliminar esta historia?"
+  },
+  "errors": {
+    "notFound": "Página no encontrada",
+    "unauthorized": "Acceso no autorizado",
+    "generic": "Algo salió mal"
+  },
+  "flag": {
+    "button": "Reportar",
+    "confirm": "¿Reportar esta historia?",
+    "success": "Historia reportada"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "home": "Home",
+    "submit": "Share a story",
+    "admin": "Admin"
+  },
+  "feed": {
+    "title": "Ellas",
+    "tagline": "Stories of women the world never documented.",
+    "filterAll": "All",
+    "filterHonor": "Honor",
+    "filterTell": "My story",
+    "empty": "No stories here yet. Be the first to share.",
+    "loadMore": "Load more",
+    "postedBy": "Shared by",
+    "anonymous": "Anonymous",
+    "typeHonor": "Honor",
+    "typeTell": "My story"
+  },
+  "categories": {
+    "work": "Work",
+    "family": "Family",
+    "health": "Health",
+    "love": "Love",
+    "money": "Money",
+    "education": "Education",
+    "courage": "Courage"
+  },
+  "versionPanel": {
+    "original": "Original",
+    "edited": "Edited",
+    "translated": "Translated",
+    "editedBadge": "Spelling corrected by AI",
+    "translatedBadge": "Translated by AI"
+  },
+  "readingPrefs": {
+    "label": "Reading preferences",
+    "fontSize": "Text size",
+    "fontSmall": "Small",
+    "fontMedium": "Medium",
+    "fontLarge": "Large",
+    "highContrast": "High contrast"
+  },
+  "submit": {
+    "title": "Share a story",
+    "typeLabel": "What kind of story is this?",
+    "typeHonor": "Honor — someone else's story",
+    "typeHonorDesc": "To honor a woman you admire. She doesn't need to know.",
+    "typeTell": "My story — my own moment",
+    "typeTellDesc": "To document a milestone that doesn't belong on any resume.",
+    "categoryLabel": "Category",
+    "textLabel": "The story",
+    "textPlaceholder": "Write here, in any language. Your voice is what matters.",
+    "authorNameLabel": "How do you want to appear? (optional)",
+    "authorNamePlaceholder": "Your name or nickname",
+    "anonymousLabel": "Post anonymously",
+    "submitButton": "Publish story",
+    "submitting": "Publishing…",
+    "successTitle": "Story published",
+    "successMessage": "Thank you for giving voice to this story.",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "processingNotice": "Your story will be processed by AI to detect language, correct spelling, and generate translations. Your original voice is always preserved."
+  },
+  "admin": {
+    "title": "Admin panel",
+    "statusPublished": "Published",
+    "statusRemoved": "Removed",
+    "remove": "Remove",
+    "restore": "Restore",
+    "flagCount": "{count, plural, one {# report} other {# reports}}",
+    "confirmRemove": "Remove this story?"
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "unauthorized": "Unauthorized",
+    "generic": "Something went wrong"
+  },
+  "flag": {
+    "button": "Report",
+    "confirm": "Report this story?",
+    "success": "Story reported"
+  }
+}
