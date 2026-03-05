@@ -10,6 +10,8 @@ import { ChevronDown } from "lucide-react";
 import { TestimonyCard } from "./TestimonyCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useShouldReduceMotion } from "@/lib/motionPrefs";
+import { useEffect } from "react";
+import * as React from "react";
 
 type Category =
   | "work"
@@ -65,7 +67,7 @@ export function FeedClient() {
   const categoryParam = searchParams.get("category") as Category | null;
   const filterKey = `${typeParam ?? "all"}-${categoryParam ?? "all"}`;
 
-  const { results, status, loadMore } = usePaginatedQuery(
+  const queryResult = usePaginatedQuery(
     api.testimonies.list,
     {
       type: typeParam ?? undefined,
@@ -73,12 +75,55 @@ export function FeedClient() {
     },
     { initialNumItems: 20 }
   );
+
+  const { results, status, loadMore } = queryResult;
+
+  // Debug logging
+  useEffect(() => {
+    console.log("FeedClient status:", status, "results:", results?.length);
+    if (status === "LoadingFirstPage" && results.length === 0) {
+      console.log("Still loading first page...");
+    }
+  }, [status, results]);
   
   const transitionDuration = shouldReduceMotion ? 0 : undefined;
 
+  // Show error state if loading takes too long (potential connection issue)
+  const [showError, setShowError] = React.useState(false);
+  
+  React.useEffect(() => {
+    if (status === "LoadingFirstPage") {
+      const timer = setTimeout(() => {
+        setShowError(true);
+      }, 10000); // Show error after 10 seconds
+      return () => clearTimeout(timer);
+    } else {
+      setShowError(false);
+    }
+  }, [status]);
+
   return (
     <AnimatePresence mode="wait" initial={false}>
-      {status === "LoadingFirstPage" ? (
+      {showError ? (
+        <motion.section
+          key="error"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="border-t-[3px] border-b-[3px] border-foreground mt-8 mb-12"
+        >
+          <div className="py-20 text-center">
+            <p className="text-muted-foreground mb-4">
+              Error al cargar las historias. Por favor, recarga la página.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-sm text-primary hover:underline"
+            >
+              Recargar página
+            </button>
+          </div>
+        </motion.section>
+      ) : status === "LoadingFirstPage" ? (
         /* Skeleton grid */
         <motion.div
           key={`skeleton-${filterKey}`}
@@ -146,13 +191,15 @@ export function FeedClient() {
 
           {status === "CanLoadMore" && (
             <div className="flex justify-center bg-background py-8 border-t border-border">
-              <button
+              <motion.button
                 onClick={() => loadMore(20)}
                 className="flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-foreground hover:text-primary transition-colors"
+                whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
+                transition={{ duration: 0.1 }}
               >
                 <ChevronDown className="h-4 w-4" />
                 {t("loadMore")}
-              </button>
+              </motion.button>
             </div>
           )}
         </motion.section>

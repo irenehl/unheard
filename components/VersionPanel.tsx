@@ -140,13 +140,19 @@ export function VersionPanel({
           {renderText(editedText)}
         </p>
         <ExpandLink textLength={editedText.length} />
-        <Badge
-          variant="outline"
-          className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.3, delay: 0.25 }}
         >
-          <Sparkles className="h-3 w-3" />
-          {t("editedBadge")}
-        </Badge>
+          <Badge
+            variant="outline"
+            className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
+          >
+            <Sparkles className="h-3 w-3" />
+            {t("editedBadge")}
+          </Badge>
+        </motion.div>
       </>
     ),
     translated: (
@@ -155,13 +161,19 @@ export function VersionPanel({
           {renderText(translatedText[locale] ?? "")}
         </p>
         <ExpandLink textLength={(translatedText[locale] ?? "").length} />
-        <Badge
-          variant="outline"
-          className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.3, delay: 0.25 }}
         >
-          <Sparkles className="h-3 w-3" />
-          {t("translatedBadge")}
-        </Badge>
+          <Badge
+            variant="outline"
+            className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
+          >
+            <Sparkles className="h-3 w-3" />
+            {t("translatedBadge")}
+          </Badge>
+        </motion.div>
       </>
     ),
   };

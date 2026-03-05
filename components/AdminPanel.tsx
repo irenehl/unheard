@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useShouldReduceMotion } from "@/lib/motionPrefs";
 import {
   Card,
   CardContent,
@@ -35,6 +36,7 @@ export function AdminPanel() {
   );
   const setStatusMutation = useMutation(api.testimonies.setStatus);
 
+  const shouldReduceMotion = useShouldReduceMotion();
   const [confirmId, setConfirmId] = useState<Id<"testimonies"> | null>(null);
   /** Track IDs being removed so we can animate them out before Convex updates */
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
@@ -98,16 +100,26 @@ export function AdminPanel() {
                       <Badge variant="outline" className="capitalize">
                         {testimony.category}
                       </Badge>
-                      <Badge
-                        variant={isPublished ? "default" : "secondary"}
-                        className={
-                          isPublished
-                            ? "bg-primary/20 text-primary border-primary/30"
-                            : "text-muted-foreground"
-                        }
-                      >
-                        {isPublished ? t("statusPublished") : t("statusRemoved")}
-                      </Badge>
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.span
+                          key={testimony.status}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+                        >
+                          <Badge
+                            variant={isPublished ? "default" : "secondary"}
+                            className={
+                              isPublished
+                                ? "bg-primary/20 text-primary border-primary/30"
+                                : "text-muted-foreground"
+                            }
+                          >
+                            {isPublished ? t("statusPublished") : t("statusRemoved")}
+                          </Badge>
+                        </motion.span>
+                      </AnimatePresence>
                       {flagCount > 0 && (
                         <Badge variant="destructive">
                           {t("flagCount", { count: flagCount })}
@@ -155,10 +167,15 @@ export function AdminPanel() {
 
       {status === "CanLoadMore" && (
         <div className="flex justify-center">
-          <Button variant="outline" onClick={() => loadMore(50)}>
-            <ChevronDown className="mr-2 h-4 w-4" />
-            {tFeed("loadMore")}
-          </Button>
+          <motion.div
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
+            transition={{ duration: 0.1 }}
+          >
+            <Button variant="outline" onClick={() => loadMore(50)}>
+              <ChevronDown className="mr-2 h-4 w-4" />
+              {tFeed("loadMore")}
+            </Button>
+          </motion.div>
         </div>
       )}
 

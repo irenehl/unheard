@@ -17,10 +17,10 @@ export async function NavBar({ locale }: { locale: string }) {
   return (
     <header className="bg-background pt-8 pb-4 relative z-10">
       <div className="mx-auto max-w-7xl px-4 flex flex-col items-center">
-        <div className="w-full flex justify-between items-end mb-6 border-b border-border pb-6 relative">
+        <div className="w-full flex justify-between items-end mb-6 border-b border-border pb-6 relative anim-0">
           {/* Subtle masthead plate background */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-paper-shadow/20 pointer-events-none -z-10" />
-          
+
           <div className="hidden md:flex flex-col items-start justify-end w-48 pb-2">
             <span className="text-[10px] font-mono tracking-widest uppercase text-muted-foreground">
               {t("volume")}
@@ -32,7 +32,7 @@ export async function NavBar({ locale }: { locale: string }) {
 
           <Link
             href={`/${locale}`}
-            className="text-foreground hover:text-primary transition-colors text-center flex-1 px-4"
+            className="anim-1 text-foreground hover:text-primary transition-colors text-center flex-1 px-4"
             style={{
               fontFamily: "var(--font-display), var(--font-serif), Georgia, serif",
               fontSize: "clamp(4rem, 10vw, 7rem)",
@@ -55,7 +55,7 @@ export async function NavBar({ locale }: { locale: string }) {
           </div>
         </div>
 
-        <div className="w-full border-t-[4px] border-b border-foreground py-3 flex justify-between items-center">
+        <div className="anim-2 w-full border-t-[4px] border-b border-foreground py-3 flex justify-between items-center">
           <nav
             className="flex items-center gap-6"
             aria-label={t("mainNav")}

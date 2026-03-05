@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Settings } from "lucide-react";
+import { motion } from "framer-motion";
+import { useShouldReduceMotion } from "@/lib/motionPrefs";
 import {
   Popover,
   PopoverContent,
@@ -34,6 +36,7 @@ export function ReadingPrefsPopover({
   reduceTexture,
 }: ReadingPrefsPopoverProps) {
   const t = useTranslations("readingPrefs");
+  const shouldReduceMotion = useShouldReduceMotion();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -73,7 +76,7 @@ export function ReadingPrefsPopover({
           <p className="text-xs text-muted-foreground mb-2">{t("fontSize")}</p>
           <div className="flex gap-1">
             {(["sm", "md", "lg"] as FontSize[]).map((size) => (
-              <button
+              <motion.button
                 key={size}
                 onClick={() => onFontSize(size)}
                 className={`flex-1 rounded py-1 text-xs font-medium transition-colors ${
@@ -81,13 +84,15 @@ export function ReadingPrefsPopover({
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-secondary"
                 }`}
+                whileTap={shouldReduceMotion ? undefined : { scale: 0.92 }}
+                transition={{ duration: 0.1 }}
               >
                 {size === "sm"
                   ? t("fontSmall")
                   : size === "md"
                   ? t("fontMedium")
                   : t("fontLarge")}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>

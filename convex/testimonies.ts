@@ -20,34 +20,52 @@ export const list = query({
     paginationOpts: v.any(),
   },
   handler: async (ctx, { type, category, paginationOpts }) => {
-    let queryBuilder = ctx.db
-      .query("testimonies")
-      .withIndex("by_createdAt")
-      .filter((q) => q.eq(q.field("status"), "published"))
-      .order("desc");
+    try {
+      // Always filter by published status first
+      // Use the most specific index available, then filter by the other field if needed
+      let queryBuilder;
+      
+      if (type && category) {
+        // Both filters: use by_type index and filter by category
+        queryBuilder = ctx.db
+          .query("testimonies")
+          .withIndex("by_type", (q) => q.eq("type", type))
+          .filter((q) => q.eq(q.field("status"), "published"))
+          .filter((q) => q.eq(q.field("category"), category))
+          .order("desc");
+      } else if (type) {
+        // Only type filter: use by_type index
+        queryBuilder = ctx.db
+          .query("testimonies")
+          .withIndex("by_type", (q) => q.eq("type", type))
+          .filter((q) => q.eq(q.field("status"), "published"))
+          .order("desc");
+      } else if (category) {
+        // Only category filter: use by_category index
+        queryBuilder = ctx.db
+          .query("testimonies")
+          .withIndex("by_category", (q) => q.eq("category", category))
+          .filter((q) => q.eq(q.field("status"), "published"))
+          .order("desc");
+      } else {
+        // No filters: use by_createdAt index
+        queryBuilder = ctx.db
+          .query("testimonies")
+          .withIndex("by_createdAt")
+          .filter((q) => q.eq(q.field("status"), "published"))
+          .order("desc");
+      }
 
-    if (type) {
-      queryBuilder = ctx.db
-        .query("testimonies")
-        .withIndex("by_type", (q) => q.eq("type", type))
-        .filter((q) => q.eq(q.field("status"), "published"))
-        .order("desc");
+      const page = await queryBuilder.paginate({
+        numItems: paginationOpts.numItems,
+        cursor: paginationOpts.cursor,
+      });
+
+      return page;
+    } catch (error) {
+      console.error("Error in testimonies.list query:", error);
+      throw error;
     }
-
-    if (category) {
-      queryBuilder = ctx.db
-        .query("testimonies")
-        .withIndex("by_category", (q) => q.eq("category", category))
-        .filter((q) => q.eq(q.field("status"), "published"))
-        .order("desc");
-    }
-
-    const page = await queryBuilder.paginate({
-      numItems: paginationOpts.numItems,
-      cursor: paginationOpts.cursor,
-    });
-
-    return page;
   },
 });
 
