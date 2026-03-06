@@ -173,33 +173,18 @@ export default async function LocaleLayout({
   }).catch(() => {});
   // #endregion
 
-  let navBar: React.ReactNode;
-  let navBarFallbackUsed = false;
-  try {
-    navBar = await NavBar({ locale });
-  } catch {
-    navBarFallbackUsed = true;
-    navBar = (
-      <header className="bg-background px-4 py-6 border-b border-border">
-        <div className="mx-auto max-w-7xl text-sm uppercase tracking-widest text-muted-foreground">
-          Ellas
-        </div>
-      </header>
-    );
-  }
-
   return (
     <ClerkProvider>
       <ConvexClientProvider>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <DebugPing
             marker="layout-client-mounted"
-            data={{ locale, navBarFallbackUsed }}
+            data={{ locale }}
           />
-          {navBar}
+          <NavBar locale={locale} />
           <DebugPing
             marker="layout-after-navbar"
-            data={{ locale, navBarFallbackUsed }}
+            data={{ locale }}
           />
           {children}
         </NextIntlClientProvider>

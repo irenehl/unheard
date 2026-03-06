@@ -80,9 +80,6 @@ export function VersionPanel({
   showExpandEdited = false,
   showExpandTranslated = false,
 }: VersionPanelProps) {
-  // #region agent log
-  fetch('http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d1fc6'},body:JSON.stringify({sessionId:'9d1fc6',location:'VersionPanel.tsx:67',message:'VersionPanel props received',data:{testimonyId,originalTextLength:originalText.length,editedTextLength:editedText.length,showExpandLink,showExpandOriginal,showExpandEdited,showExpandTranslated,TRUNCATE_LENGTH},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   const t = useTranslations("versionPanel");
   const locale = useLocale();
 
@@ -121,20 +118,9 @@ export function VersionPanel({
 
   function renderExpandLink(textLength: number, hasMoreForTab: boolean) {
     const shouldShow = hasMoreForTab || textLength > TRUNCATE_LENGTH;
-    // #region agent log
-    fetch('http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d1fc6'},body:JSON.stringify({sessionId:'9d1fc6',location:'VersionPanel.tsx:113',message:'renderExpandLink called',data:{testimonyId,activeTab,textLength,TRUNCATE_LENGTH,showExpandLink,hasMoreForTab,isFullPage,shouldShow},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     if (isFullPage) return null;
     if (String(testimonyId).startsWith("placeholder")) return null;
-    if (!shouldShow) {
-      // #region agent log
-      fetch('http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d1fc6'},body:JSON.stringify({sessionId:'9d1fc6',location:'VersionPanel.tsx:117',message:'renderExpandLink returning null',data:{activeTab,textLength,TRUNCATE_LENGTH,showExpandLink,hasMoreForTab,shouldShow},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-      return null;
-    }
-    // #region agent log
-    fetch('http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d1fc6'},body:JSON.stringify({sessionId:'9d1fc6',location:'VersionPanel.tsx:118',message:'renderExpandLink returning Link component',data:{activeTab,textLength,TRUNCATE_LENGTH,showExpandLink,hasMoreForTab,shouldShow},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
+    if (!shouldShow) return null;
     return (
       <Link
         href={`/${locale}/story/${testimonyId}`}
@@ -159,10 +145,7 @@ export function VersionPanel({
       translated: showExpandTranslated,
     };
 
-    // #region agent log
-    fetch('http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d1fc6'},body:JSON.stringify({sessionId:'9d1fc6',location:'VersionPanel.tsx:renderTabContent',message:'Rendering tab content',data:{testimonyId,activeTab,originalTextLength:originalText.length,editedTextLength:editedText.length,translatedTextLength:translated.length,showExpandLink,showExpandOriginal,showExpandEdited,showExpandTranslated,activeTabHasMore:hasMoreByTab[activeTab]},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-    
+
     if (activeTab === "original") {
       return (
         <>

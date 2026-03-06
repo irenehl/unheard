@@ -1,5 +1,6 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
+import { Suspense } from "react";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { DebugPing } from "@/components/DebugPing";
 import { FeedClient } from "@/components/FeedClient";
@@ -101,7 +102,12 @@ type Category =
 export default async function FeedPage({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string; category?: string }>;
+  searchParams: Promise<{
+    type?: string;
+    category?: string;
+    debugSegments?: string;
+    debugPlainCards?: string;
+  }>;
 }) {
   let t: Awaited<ReturnType<typeof getTranslations>>;
   let locale: Awaited<ReturnType<typeof getLocale>>;
@@ -165,6 +171,17 @@ export default async function FeedPage({
   const category = categoryValues.includes(params.category as Category)
     ? (params.category as Category)
     : undefined;
+  const debugSegments = (params.debugSegments ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const segmentSet = new Set(debugSegments);
+  const isolateMode = segmentSet.size > 0;
+  const showPhotoGrid = !isolateMode || segmentSet.has("photo");
+  const showFilter = !isolateMode || segmentSet.has("filter");
+  const showFeed = !isolateMode || segmentSet.has("feed");
+  const plainCards =
+    params.debugPlainCards === "1" || params.debugPlainCards === "true";
   // #region agent log
   fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
     method: "POST",
@@ -241,7 +258,15 @@ export default async function FeedPage({
     <>
       <DebugPing
         marker="feed-page-rendered"
-        data={{ locale, itemCount: initialPage.page.length }}
+        data={{
+          locale,
+          itemCount: initialPage.page.length,
+          isolateMode,
+          showPhotoGrid,
+          showFilter,
+          showFeed,
+          plainCards,
+        }}
       />
       <section
         aria-labelledby="hero-title"
@@ -286,29 +311,39 @@ export default async function FeedPage({
         </div>
       </section>
 
-      {/* Photo grid — visual archive */}
-      <div className="w-screen border-b border-border">
-        <PhotoGrid />
-      </div>
+      {showPhotoGrid && (
+        <div className="w-screen border-b border-border">
+          <PhotoGrid />
+        </div>
+      )}
 
-      <nav aria-label={t("feed.filterAll")}>
-        <CategoryFilter />
-      </nav>
+      {showFilter && (
+        <Suspense fallback={null}>
+          <nav aria-label={t("feed.filterAll")}>
+            <CategoryFilter />
+          </nav>
+        </Suspense>
+      )}
 
-      <section
-        id="stories"
-        aria-label={t("feed.title")}
-        className="mx-auto max-w-7xl px-4 sm:px-6 py-10"
-      >
-        <FeedClient
-          locale={locale}
-          initialPage={initialPage}
-          initialFilters={{
-            type: type ?? null,
-            category: category ?? null,
-          }}
-        />
-      </section>
+      {showFeed && (
+        <section
+          id="stories"
+          aria-label={t("feed.title")}
+          className="mx-auto max-w-7xl px-4 sm:px-6 py-10"
+        >
+          <Suspense fallback={null}>
+            <FeedClient
+              locale={locale}
+              initialPage={initialPage}
+              initialFilters={{
+                type: type ?? null,
+                category: category ?? null,
+              }}
+              plainCards={plainCards}
+            />
+          </Suspense>
+        </section>
+      )}
     </>
   );
 }

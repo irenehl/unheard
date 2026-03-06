@@ -76,10 +76,12 @@ export function FeedClient({
   locale,
   initialPage,
   initialFilters,
+  plainCards = false,
 }: {
   locale: string;
   initialPage: FeedPage;
   initialFilters: { type: TypeFilter; category: CategoryFilter };
+  plainCards?: boolean;
 }) {
   const t = useTranslations("feed");
   const searchParams = useSearchParams();
@@ -178,6 +180,22 @@ export function FeedClient({
           >
             <div className="columns-1 gap-x-px md:columns-2 lg:columns-3 bg-border">
               {items.map((testimony) => {
+                if (plainCards) {
+                  return (
+                    <m.article
+                      key={testimony._id}
+                      variants={shouldReduceMotion ? { hidden: {}, visible: {} } : itemVariants}
+                      className="mb-px w-full break-inside-avoid bg-background p-6"
+                    >
+                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        {testimony.type} · {testimony.category}
+                      </p>
+                      <p className="mt-3 text-sm text-foreground line-clamp-6">
+                        {testimony.editedText || testimony.originalText}
+                      </p>
+                    </m.article>
+                  );
+                }
                 return (
                   <m.div
                     key={testimony._id}

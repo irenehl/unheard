@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Flag, Check, Pencil, Trash2 } from "lucide-react";
@@ -68,12 +68,6 @@ export function TestimonyCard({
   const [flagged, setFlagged] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d1fc6'},body:JSON.stringify({sessionId:'9d1fc6',location:'TestimonyCard.tsx:useEffect',message:'TestimonyCard passing props to VersionPanel',data:{testimonyId:testimony._id,originalTextLength:testimony.originalText.length,editedTextLength:testimony.editedText.length,translatedTextLength:Object.values(testimony.translatedText)[0]?.length ?? 0,showExpandLink,showExpandOriginal,showExpandEdited,showExpandTranslated},timestamp:Date.now()})}).catch(()=>{});
-  }, [testimony._id, testimony.originalText.length, testimony.editedText.length, testimony.translatedText, showExpandLink, showExpandOriginal, showExpandEdited, showExpandTranslated]);
-  // #endregion
 
   const displayName = testimony.isAnonymous
     ? t("feed.anonymous")
