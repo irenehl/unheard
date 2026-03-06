@@ -1,6 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
 import { CategoryFilter } from "@/components/CategoryFilter";
+import { DebugPing } from "@/components/DebugPing";
 import { FeedClient } from "@/components/FeedClient";
 import { PhotoGrid } from "@/components/PhotoGrid";
 import { fetchQuery } from "convex/nextjs";
@@ -238,6 +239,10 @@ export default async function FeedPage({
 
   return (
     <>
+      <DebugPing
+        marker="feed-page-rendered"
+        data={{ locale, itemCount: initialPage.page.length }}
+      />
       <section
         aria-labelledby="hero-title"
         className="relative flex min-h-[68vh] flex-col justify-between border-b border-border px-6 py-8 sm:px-10 lg:px-16 overflow-hidden"

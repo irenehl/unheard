@@ -4,6 +4,7 @@ import { getMessages } from "next-intl/server";
 import { ClerkProvider } from "@clerk/nextjs";
 import { routing } from "@/i18n/routing";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
+import { DebugPing } from "@/components/DebugPing";
 import { NavBar } from "@/components/NavBar";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -172,11 +173,34 @@ export default async function LocaleLayout({
   }).catch(() => {});
   // #endregion
 
+  let navBar: React.ReactNode;
+  let navBarFallbackUsed = false;
+  try {
+    navBar = await NavBar({ locale });
+  } catch {
+    navBarFallbackUsed = true;
+    navBar = (
+      <header className="bg-background px-4 py-6 border-b border-border">
+        <div className="mx-auto max-w-7xl text-sm uppercase tracking-widest text-muted-foreground">
+          Ellas
+        </div>
+      </header>
+    );
+  }
+
   return (
     <ClerkProvider>
       <ConvexClientProvider>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <NavBar locale={locale} />
+          <DebugPing
+            marker="layout-client-mounted"
+            data={{ locale, navBarFallbackUsed }}
+          />
+          {navBar}
+          <DebugPing
+            marker="layout-after-navbar"
+            data={{ locale, navBarFallbackUsed }}
+          />
           {children}
         </NextIntlClientProvider>
       </ConvexClientProvider>
