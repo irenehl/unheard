@@ -79,3 +79,6 @@
 {"sessionId":"269760","runId":"run2","hypothesisId":"H1","location":"lib/motionPrefs.ts:useShouldReduceMotion","message":"Client instrumentation heartbeat","data":{"reduceMotionPref":false},"timestamp":1772783399967}
 {"sessionId":"269760","runId":"run2","hypothesisId":"H1","location":"lib/motionPrefs.ts:useShouldReduceMotion","message":"Client instrumentation heartbeat","data":{"reduceMotionPref":false},"timestamp":1772783401487}
 {"sessionId":"269760","runId":"run2","hypothesisId":"H1","location":"lib/motionPrefs.ts:useShouldReduceMotion","message":"Client instrumentation heartbeat","data":{"reduceMotionPref":false},"timestamp":1772784016879}
+{"sessionId":"269760","runId":"run2","hypothesisId":"H1","location":"lib/motionPrefs.ts:useShouldReduceMotion","message":"Client instrumentation heartbeat","data":{"reduceMotionPref":false},"timestamp":1772784261339}
+{"sessionId":"269760","runId":"run2","hypothesisId":"H1","location":"lib/motionPrefs.ts:useShouldReduceMotion","message":"Client instrumentation heartbeat","data":{"reduceMotionPref":false},"timestamp":1772784267005}
+{"sessionId":"269760","runId":"run2","hypothesisId":"H1","location":"lib/motionPrefs.ts:useShouldReduceMotion","message":"Client instrumentation heartbeat","data":{"reduceMotionPref":false},"timestamp":1772784282063}
