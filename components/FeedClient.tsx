@@ -90,6 +90,16 @@ const itemVariants: Variants = {
   },
 };
 
+const CATEGORY_VALUES: Category[] = [
+  "work",
+  "family",
+  "health",
+  "love",
+  "money",
+  "education",
+  "courage",
+];
+
 export function FeedClient({
   locale,
   initialPage,
@@ -110,6 +120,10 @@ export function FeedClient({
   const categoryParam = searchParams.get("category") as Category | null;
   const filterKey = `${typeParam ?? "all"}-${categoryParam ?? "all"}-${locale}`;
   const initialFilterKey = `${initialFilters.type ?? "all"}-${initialFilters.category ?? "all"}-${locale}`;
+  const safeType = typeParam === "honor" || typeParam === "tell" ? typeParam : undefined;
+  const safeCategory = CATEGORY_VALUES.includes(categoryParam as Category)
+    ? (categoryParam as Category)
+    : undefined;
 
   const transitionDuration = shouldReduceMotion ? 0 : undefined;
   const [items, setItems] = React.useState<FeedItem[]>(initialPage.page);
@@ -121,8 +135,10 @@ export function FeedClient({
   const [showSlowConnection, setShowSlowConnection] = React.useState(false);
   const liveProbe = useQuery(api.testimonies.listFeed, {
     locale,
+    type: safeType,
+    category: safeCategory,
     paginationOpts: {
-      numItems: 1,
+      numItems: 20,
       cursor: null,
     },
   });
@@ -177,12 +193,45 @@ export function FeedClient({
           locale,
           liveProbeLen: liveProbe.page.length,
           liveProbeIsDone: liveProbe.isDone,
+          safeType: safeType ?? null,
+          safeCategory: safeCategory ?? null,
         },
         timestamp: Date.now(),
       }),
     }).catch(() => {});
     // #endregion
-  }, [locale, liveProbe]);
+  }, [locale, liveProbe, safeType, safeCategory]);
+
+  React.useEffect(() => {
+    if (!liveProbe) return;
+    if (items.length > 0) return;
+    if (liveProbe.page.length === 0) return;
+
+    setItems(liveProbe.page as FeedItem[]);
+    setCursor(liveProbe.isDone ? null : liveProbe.continueCursor);
+    setLoadError(false);
+
+    // #region agent log
+    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+      body: JSON.stringify({
+        sessionId: "e5cbed",
+        runId: "post-fix-3",
+        hypothesisId: "H23",
+        location: "components/FeedClient.tsx:useEffect:recover-from-live-probe",
+        message: "Recovered feed items from live Convex query",
+        data: {
+          locale,
+          recoveredLen: liveProbe.page.length,
+          safeType: safeType ?? null,
+          safeCategory: safeCategory ?? null,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [items.length, liveProbe, locale, safeType, safeCategory]);
 
   React.useEffect(() => {
     setItems(initialPage.page);
@@ -214,8 +263,8 @@ export function FeedClient({
         numItems: "20",
         cursor,
       });
-      if (typeParam) params.set("type", typeParam);
-      if (categoryParam) params.set("category", categoryParam);
+      if (safeType) params.set("type", safeType);
+      if (safeCategory) params.set("category", safeCategory);
 
       const response = await fetch(`/api/testimonies?${params.toString()}`, {
         method: "GET",
