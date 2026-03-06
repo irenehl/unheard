@@ -9,6 +9,22 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import type { Metadata } from "next";
 
+// #region agent log
+fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+  method: "POST",
+  headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+  body: JSON.stringify({
+    sessionId: "e5cbed",
+    runId: "pre-fix-4",
+    hypothesisId: "H11",
+    location: "app/[locale]/page.tsx:module-init",
+    message: "FeedPage module loaded",
+    data: { module: "page" },
+    timestamp: Date.now(),
+  }),
+}).catch(() => {});
+// #endregion
+
 export async function generateMetadata({
   params,
 }: {

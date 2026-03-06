@@ -10,6 +10,22 @@ import { PhotoUploadModal } from "./PhotoUploadModal";
 import { api } from "@/convex/_generated/api";
 import { useShouldReduceMotion } from "@/lib/motionPrefs";
 
+// #region agent log
+fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+  method: "POST",
+  headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+  body: JSON.stringify({
+    sessionId: "e5cbed",
+    runId: "pre-fix-4",
+    hypothesisId: "H14",
+    location: "components/PhotoGrid.tsx:module-init",
+    message: "PhotoGrid module loaded",
+    data: { module: "PhotoGrid" },
+    timestamp: Date.now(),
+  }),
+}).catch(() => {});
+// #endregion
+
 const EASE = [0.25, 0, 0, 1] as [number, number, number, number];
 const VISIBLE_DESKTOP = 4;
 const AUTOPLAY_MS = 4000;
