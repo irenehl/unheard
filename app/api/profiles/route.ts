@@ -49,11 +49,13 @@ export async function POST(req: NextRequest) {
       name,
       profession,
       country,
-      submittedBy: userId ?? undefined,
+      // Backward-compatible with old Convex schema where submittedBy is required.
+      submittedBy: userId ?? "anonymous",
     });
 
     return NextResponse.json({ id }, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error("Error in /api/profiles POST:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
