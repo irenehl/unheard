@@ -1,7 +1,6 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
 import { Suspense } from "react";
-import { unstable_noStore as noStore } from "next/cache";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { DebugPing } from "@/components/DebugPing";
 import { FeedClient } from "@/components/FeedClient";
@@ -10,8 +9,6 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { Metadata } from "next";
-
-export const dynamic = "force-dynamic";
 
 // #region agent log
 fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
@@ -156,8 +153,6 @@ export default async function FeedPage({
     debugMinimal?: string;
   }>;
 }) {
-  noStore();
-
   const params = await searchParams;
   const debugMinimal =
     params.debugMinimal === "1" || params.debugMinimal === "true";

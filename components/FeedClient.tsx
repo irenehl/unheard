@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
 import {
   AnimatePresence,
   LazyMotion,
@@ -13,6 +14,7 @@ import {
 import { ChevronDown } from "lucide-react";
 import { TestimonyCard } from "./TestimonyCard";
 import { useShouldReduceMotion } from "@/lib/motionPrefs";
+import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import * as React from "react";
 
@@ -117,6 +119,13 @@ export function FeedClient({
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
   const [loadError, setLoadError] = React.useState(false);
   const [showSlowConnection, setShowSlowConnection] = React.useState(false);
+  const liveProbe = useQuery(api.testimonies.listFeed, {
+    locale,
+    paginationOpts: {
+      numItems: 1,
+      cursor: null,
+    },
+  });
 
   React.useEffect(() => {
     // #region agent log
@@ -151,6 +160,29 @@ export function FeedClient({
     typeParam,
     categoryParam,
   ]);
+
+  React.useEffect(() => {
+    if (!liveProbe) return;
+    // #region agent log
+    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+      body: JSON.stringify({
+        sessionId: "e5cbed",
+        runId: "pre-fix-7",
+        hypothesisId: "H22",
+        location: "components/FeedClient.tsx:useEffect:live-probe",
+        message: "FeedClient live Convex probe completed",
+        data: {
+          locale,
+          liveProbeLen: liveProbe.page.length,
+          liveProbeIsDone: liveProbe.isDone,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [locale, liveProbe]);
 
   React.useEffect(() => {
     setItems(initialPage.page);
