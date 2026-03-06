@@ -271,6 +271,19 @@ html[data-reduce-motion="true"] body::after {
   color: var(--foreground);
 }
 
+/* ── Ken Burns — photo grid ─────────────────────────────────── */
+@keyframes kenBurns {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.ken-burns {
+  animation: kenBurns 16s ease-in-out infinite;
+  animation-delay: var(--ken-delay, 0s);
+  will-change: transform;
+}
+
 /* ── Hide scrollbar but keep scroll ─────────────────────────── */
 .scrollbar-hide {
   -ms-overflow-style: none;

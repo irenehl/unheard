@@ -4,6 +4,9 @@ import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { VersionPanel } from "@/components/VersionPanel";
+import { SharePopover } from "@/components/SharePopover";
+import { StoryDeleteButton } from "@/components/StoryActions";
+import { auth } from "@clerk/nextjs/server";
 import { Heart, Mic } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -86,7 +89,7 @@ export default async function StoryPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
-  const t = await getTranslations();
+  const [t, { userId }] = await Promise.all([getTranslations(), auth()]);
 
   if (id.startsWith("placeholder")) {
     notFound();
@@ -117,6 +120,9 @@ export default async function StoryPage({
 
   const siteUrl = process.env.SITE_URL || "https://example.com";
   const url = `${siteUrl}/${locale}/story/${id}`;
+  const isOwn = userId && testimony.authorId === userId;
+  const ageMs = Date.now() - testimony.createdAt;
+  const canEdit = isOwn && ageMs < 86_400_000;
   const categoryLabel = t(`categories.${testimony.category}`);
   const storyTitle = `${t("common.storyOf")} ${categoryLabel}`;
   const authorName = testimony.isAnonymous
@@ -151,12 +157,20 @@ export default async function StoryPage({
       />
 
       <article className="mx-auto max-w-3xl px-6 sm:px-8">
-        <Link
-          href={`/${locale}`}
-          className="inline-block mb-12 text-[10px] font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors border-b border-transparent hover:border-foreground pb-0.5"
-        >
-          {t("common.backToFront")}
-        </Link>
+        <div className="flex items-center justify-between mb-12">
+          <Link
+            href={`/${locale}`}
+            className="inline-block text-[10px] font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors border-b border-transparent hover:border-foreground pb-0.5"
+          >
+            {t("common.backToFront")}
+          </Link>
+          <SharePopover
+            testimonyId={testimony._id}
+            originalText={testimony.originalText}
+            locale={locale}
+            storyUrl={url}
+          />
+        </div>
 
         <header className="mb-12 border-b border-border pb-8">
           <div className="flex flex-col gap-6">
@@ -193,6 +207,20 @@ export default async function StoryPage({
             </div>
           </div>
         </header>
+
+        {isOwn && (
+          <div className="flex items-center gap-6 mb-8">
+            {canEdit && (
+              <Link
+                href={`/${locale}/story/${id}/edit`}
+                className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {t("story.edit")}
+              </Link>
+            )}
+            <StoryDeleteButton testimonyId={id} locale={locale} />
+          </div>
+        )}
 
         <div className="prose-lg max-w-none">
           <VersionPanel

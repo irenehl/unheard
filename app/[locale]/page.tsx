@@ -2,6 +2,9 @@ import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { FeedClient } from "@/components/FeedClient";
+import { PhotoGrid } from "@/components/PhotoGrid";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@/convex/_generated/api";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -11,8 +14,6 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale });
-
-  const siteUrl = process.env.SITE_URL || "https://example.com";
 
   return {
     title: t("feed.title"),
@@ -33,8 +34,48 @@ export async function generateMetadata({
   };
 }
 
-export default async function FeedPage() {
-  const [t, locale] = await Promise.all([getTranslations(), getLocale()]);
+type Category =
+  | "work"
+  | "family"
+  | "health"
+  | "love"
+  | "money"
+  | "education"
+  | "courage";
+
+export default async function FeedPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string; category?: string }>;
+}) {
+  const [t, locale, params] = await Promise.all([
+    getTranslations(),
+    getLocale(),
+    searchParams,
+  ]);
+  const type =
+    params.type === "honor" || params.type === "tell" ? params.type : undefined;
+  const categoryValues: Category[] = [
+    "work",
+    "family",
+    "health",
+    "love",
+    "money",
+    "education",
+    "courage",
+  ];
+  const category = categoryValues.includes(params.category as Category)
+    ? (params.category as Category)
+    : undefined;
+  const initialPage = await fetchQuery(api.testimonies.listFeed, {
+    type,
+    category,
+    locale,
+    paginationOpts: {
+      numItems: 20,
+      cursor: null,
+    },
+  });
 
   return (
     <>
@@ -81,6 +122,11 @@ export default async function FeedPage() {
         </div>
       </section>
 
+      {/* Photo grid — visual archive */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 border-b border-border">
+        <PhotoGrid />
+      </div>
+
       <nav aria-label={t("feed.filterAll")}>
         <CategoryFilter />
       </nav>
@@ -90,7 +136,14 @@ export default async function FeedPage() {
         aria-label={t("feed.title")}
         className="mx-auto max-w-7xl px-4 sm:px-6 py-10"
       >
-        <FeedClient />
+        <FeedClient
+          locale={locale}
+          initialPage={initialPage}
+          initialFilters={{
+            type: type ?? null,
+            category: category ?? null,
+          }}
+        />
       </section>
     </>
   );

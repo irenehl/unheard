@@ -22,6 +22,9 @@ type ValidCategory = (typeof VALID_CATEGORIES)[number];
 
 export async function POST(req: NextRequest) {
   try {
+    const { userId } = await auth();
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const body = await req.json();
     const { type, category, text, authorName, isAnonymous } = body;
 
@@ -36,8 +39,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const { userId } = await auth();
-
     // Run all three OpenAI steps — only proceed once all complete
     const { originalLanguage, editedText, translatedText } =
       await processTestimony(text.trim());
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
     const id = await convex.mutation(api.testimonies.create, {
       type: type as ValidType,
       category: category as ValidCategory,
-      authorId: userId ?? null,
+      authorId: userId,
       authorName: authorName ?? undefined,
       isAnonymous: Boolean(isAnonymous),
       originalText: text.trim(),

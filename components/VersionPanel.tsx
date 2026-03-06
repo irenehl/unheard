@@ -26,6 +26,7 @@ interface VersionPanelProps {
   translatedText: Record<string, string>;
   isFeatured?: boolean;
   isFullPage?: boolean;
+  showExpandLink?: boolean;
 }
 
 type Tab = "original" | "edited" | "translated";
@@ -71,6 +72,7 @@ export function VersionPanel({
   translatedText,
   isFeatured = false,
   isFullPage = false,
+  showExpandLink = false,
 }: VersionPanelProps) {
   const t = useTranslations("versionPanel");
   const locale = useLocale();
@@ -103,13 +105,25 @@ export function VersionPanel({
   };
 
   function renderText(text: string) {
-    if (isFullPage || text.length <= TRUNCATE_LENGTH) return text;
+    if (isFullPage || showExpandLink) return text;
+    if (text.length <= TRUNCATE_LENGTH) return text;
     return text.slice(0, TRUNCATE_LENGTH).trim() + "…";
   }
 
-  function ExpandLink({ textLength }: { textLength: number }) {
-    if (isFullPage || textLength <= TRUNCATE_LENGTH) return null;
+  function renderExpandLink(textLength: number) {
+    if (isFullPage) return null;
     if (String(testimonyId).startsWith("placeholder")) return null;
+    if (showExpandLink) {
+      return (
+        <Link
+          href={`/${locale}/story/${testimonyId}`}
+          className="mt-4 text-[10px] font-bold tracking-widest uppercase text-foreground hover:text-primary transition-colors inline-block border-b border-foreground pb-0.5"
+        >
+          [ Read full story ]
+        </Link>
+      );
+    }
+    if (textLength <= TRUNCATE_LENGTH) return null;
     return (
       <Link
         href={`/${locale}/story/${testimonyId}`}
@@ -131,7 +145,7 @@ export function VersionPanel({
         <p lang={originalLanguage} className={textClass}>
           {renderText(originalText)}
         </p>
-        <ExpandLink textLength={originalText.length} />
+        {renderExpandLink(originalText.length)}
       </>
     ),
     edited: (
@@ -139,7 +153,7 @@ export function VersionPanel({
         <p lang={originalLanguage} className={textClass}>
           {renderText(editedText)}
         </p>
-        <ExpandLink textLength={editedText.length} />
+        {renderExpandLink(editedText.length)}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -160,7 +174,7 @@ export function VersionPanel({
         <p lang={locale} className={textClass}>
           {renderText(translatedText[locale] ?? "")}
         </p>
-        <ExpandLink textLength={(translatedText[locale] ?? "").length} />
+        {renderExpandLink((translatedText[locale] ?? "").length)}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

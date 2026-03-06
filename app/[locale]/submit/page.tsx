@@ -1,6 +1,8 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
 import { SubmitForm } from "@/components/SubmitForm";
+import { SignInPrompt } from "@/components/SignInPrompt";
+import { auth } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -38,10 +40,11 @@ export async function generateMetadata({
 }
 
 export default async function SubmitPage() {
-  const [t, tNav, locale] = await Promise.all([
+  const [t, tNav, locale, { userId }] = await Promise.all([
     getTranslations("submit"),
     getTranslations("nav"),
     getLocale(),
+    auth(),
   ]);
 
   return (
@@ -71,7 +74,7 @@ export default async function SubmitPage() {
         </h1>
       </header>
 
-      <SubmitForm />
+      {userId ? <SubmitForm /> : <SignInPrompt returnUrl={`/${locale}/submit`} />}
     </div>
   );
 }

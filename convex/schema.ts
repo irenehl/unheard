@@ -16,7 +16,7 @@ export default defineSchema({
     ),
 
     // Author fields
-    authorId: v.union(v.string(), v.null()),
+    authorId: v.optional(v.string()),
     authorName: v.optional(v.string()),
     isAnonymous: v.boolean(),
 
@@ -30,9 +30,25 @@ export default defineSchema({
     status: v.union(v.literal("published"), v.literal("removed")),
     flagCount: v.number(),
     createdAt: v.number(),
+    editedAt: v.optional(v.number()),
   })
     .index("by_createdAt", ["createdAt"])
     .index("by_type", ["type", "createdAt"])
     .index("by_category", ["category", "createdAt"])
-    .index("by_status", ["status", "createdAt"]),
+    .index("by_status", ["status", "createdAt"])
+    .index("by_status_type_createdAt", ["status", "type", "createdAt"])
+    .index("by_status_category_createdAt", ["status", "category", "createdAt"])
+    .index("by_authorId", ["authorId", "createdAt"]),
+
+  profiles: defineTable({
+    storageId: v.id("_storage"),
+    name: v.string(),
+    profession: v.string(),
+    country: v.string(),
+    submittedBy: v.string(),
+    status: v.union(v.literal("published"), v.literal("removed")),
+    createdAt: v.number(),
+  })
+    .index("by_status", ["status", "createdAt"])
+    .index("by_submittedBy", ["submittedBy", "createdAt"]),
 });

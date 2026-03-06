@@ -13,6 +13,14 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next();
   }
 
+  // Keep Clerk handling active, but avoid next-intl rewriting OAuth callback path.
+  if (
+    req.nextUrl.pathname === "/sso-callback" ||
+    req.nextUrl.pathname.startsWith("/sso-callback/")
+  ) {
+    return NextResponse.next();
+  }
+
   if (isAdminRoute(req)) {
     const { sessionClaims } = await auth();
     const role = (sessionClaims?.metadata as { role?: string } | undefined)
