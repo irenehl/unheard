@@ -5,8 +5,9 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { validateImageFile } from "@/lib/imageUpload";
+import { getNormalizedConvexUrl } from "@/lib/convexUrl";
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+const convex = new ConvexHttpClient(getNormalizedConvexUrl());
 
 const VALID_TYPES = ["honor", "tell"] as const;
 const VALID_CATEGORIES = [
