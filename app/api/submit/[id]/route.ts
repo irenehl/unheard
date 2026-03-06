@@ -4,6 +4,7 @@ import { processTestimony } from "@/lib/openai";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { validateImageFile } from "@/lib/imageUpload";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -18,6 +19,13 @@ const VALID_CATEGORIES = [
 ] as const;
 
 type ValidCategory = (typeof VALID_CATEGORIES)[number];
+type PhotoAction = "keep" | "replace" | "remove";
+
+function parseOptionalField(value: FormDataEntryValue | null) {
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : undefined;
+}
 
 export async function PUT(
   req: NextRequest,
@@ -28,16 +36,53 @@ export async function PUT(
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { id } = await params;
-    const body = await req.json();
-    const { category, text } = body;
+    const formData = await req.formData();
+    const category = formData.get("category");
+    const text = formData.get("text");
+    const photoAction = (formData.get("photoAction") as PhotoAction | null) ?? "keep";
+    const photo = formData.get("photo");
+    const subjectName = parseOptionalField(formData.get("subjectName"));
+    const subjectProfession = parseOptionalField(formData.get("subjectProfession"));
+    const subjectCountry = parseOptionalField(formData.get("subjectCountry"));
+    const authorProfession = parseOptionalField(formData.get("authorProfession"));
+    const authorCountry = parseOptionalField(formData.get("authorCountry"));
 
     if (
       !category ||
       !VALID_CATEGORIES.includes(category as ValidCategory) ||
       typeof text !== "string" ||
-      text.trim().length === 0
+      text.trim().length === 0 ||
+      !["keep", "replace", "remove"].includes(photoAction)
     ) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    let photoStorageId: Id<"_storage"> | undefined;
+    if (photoAction === "replace") {
+      if (!(photo instanceof File)) {
+        return NextResponse.json({ error: "Missing photo" }, { status: 400 });
+      }
+
+      const fileError = validateImageFile(photo);
+      if (fileError === "size") {
+        return NextResponse.json({ error: "File too large" }, { status: 400 });
+      }
+      if (fileError === "type") {
+        return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
+      }
+
+      const uploadUrl = await convex.mutation(api.testimonies.generateUploadUrl, {});
+      const uploadRes = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": photo.type },
+        body: await photo.arrayBuffer(),
+      });
+      if (!uploadRes.ok) {
+        return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+      }
+
+      const uploaded = (await uploadRes.json()) as { storageId: string };
+      photoStorageId = uploaded.storageId as Id<"_storage">;
     }
 
     const { originalLanguage, editedText, translatedText } =
@@ -51,6 +96,13 @@ export async function PUT(
       originalLanguage,
       editedText,
       translatedText,
+      photoAction,
+      photoStorageId,
+      subjectName,
+      subjectProfession,
+      subjectCountry,
+      authorProfession,
+      authorCountry,
     });
 
     return NextResponse.json({ id }, { status: 200 });

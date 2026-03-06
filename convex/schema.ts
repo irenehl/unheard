@@ -18,6 +18,8 @@ export default defineSchema({
     // Author fields
     authorId: v.optional(v.string()),
     authorName: v.optional(v.string()),
+    authorProfession: v.optional(v.string()),
+    authorCountry: v.optional(v.string()),
     isAnonymous: v.boolean(),
 
     // Text versions — originalText is sacred and never modified
@@ -25,6 +27,10 @@ export default defineSchema({
     originalLanguage: v.string(),
     editedText: v.string(),
     translatedText: v.record(v.string(), v.string()),
+    photoStorageId: v.optional(v.id("_storage")),
+    subjectName: v.optional(v.string()),
+    subjectProfession: v.optional(v.string()),
+    subjectCountry: v.optional(v.string()),
 
     // Moderation and metadata
     status: v.union(v.literal("published"), v.literal("removed")),

@@ -3,11 +3,9 @@ import { auth } from "@clerk/nextjs/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { validateImageFile } from "@/lib/imageUpload";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,10 +21,11 @@ export async function POST(req: NextRequest) {
     if (!file || !name || !profession || !country) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
-    if (file.size > MAX_SIZE) {
+    const fileError = validateImageFile(file);
+    if (fileError === "size") {
       return NextResponse.json({ error: "File too large" }, { status: 400 });
     }
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (fileError === "type") {
       return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
     }
 

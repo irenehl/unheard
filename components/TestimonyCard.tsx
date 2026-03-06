@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Flag, Check, Pencil, Trash2 } from "lucide-react";
@@ -34,6 +34,7 @@ type Testimony = {
   translatedText: Record<string, string>;
   createdAt: number;
   editedAt?: number;
+  photoUrl?: string | null;
 };
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "";
@@ -45,6 +46,9 @@ export function TestimonyCard({
   currentUserId,
   locale,
   showExpandLink = false,
+  showExpandOriginal = false,
+  showExpandEdited = false,
+  showExpandTranslated = false,
 }: {
   testimony: Testimony;
   isFeatured?: boolean;
@@ -52,6 +56,9 @@ export function TestimonyCard({
   currentUserId?: string;
   locale: string;
   showExpandLink?: boolean;
+  showExpandOriginal?: boolean;
+  showExpandEdited?: boolean;
+  showExpandTranslated?: boolean;
 }) {
   const t = useTranslations();
   const flag = useMutation(api.testimonies.flag);
@@ -61,6 +68,12 @@ export function TestimonyCard({
   const [flagged, setFlagged] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // #region agent log
+  useEffect(() => {
+    fetch('http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d1fc6'},body:JSON.stringify({sessionId:'9d1fc6',location:'TestimonyCard.tsx:useEffect',message:'TestimonyCard passing props to VersionPanel',data:{testimonyId:testimony._id,originalTextLength:testimony.originalText.length,editedTextLength:testimony.editedText.length,translatedTextLength:Object.values(testimony.translatedText)[0]?.length ?? 0,showExpandLink,showExpandOriginal,showExpandEdited,showExpandTranslated},timestamp:Date.now()})}).catch(()=>{});
+  }, [testimony._id, testimony.originalText.length, testimony.editedText.length, testimony.translatedText, showExpandLink, showExpandOriginal, showExpandEdited, showExpandTranslated]);
+  // #endregion
 
   const displayName = testimony.isAnonymous
     ? t("feed.anonymous")
@@ -104,9 +117,9 @@ export function TestimonyCard({
   return (
     <>
       <motion.article
-        className="p-8 md:p-10 group h-full flex flex-col"
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        className="group flex flex-col p-8 md:p-10"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.45, ease: [0.25, 0, 0, 1] as [number, number, number, number] }}
         whileHover={shouldReduceMotion ? undefined : { y: -2 }}
@@ -129,7 +142,7 @@ export function TestimonyCard({
             </div>
 
             <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-muted-foreground">
-              <span className={isHonor ? "text-primary" : ""}>
+              <span className={isHonor ? "text-[hsl(35,40%,52%)]" : ""}>
                 {t(typeKey)}
               </span>
               <span>·</span>
@@ -142,6 +155,18 @@ export function TestimonyCard({
         </header>
 
         <div className="grow">
+          {testimony.photoUrl && (
+            <div className="mb-6 overflow-hidden border border-border">
+              <img
+                src={testimony.photoUrl}
+                alt={t("submit.photoPreviewAlt")}
+                className="block h-auto max-h-[60vh] lg:max-h-128 w-full grayscale hover:grayscale-0 transition-all duration-500"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          )}
+
           <VersionPanel
             testimonyId={testimony._id}
             originalText={testimony.originalText}
@@ -150,19 +175,22 @@ export function TestimonyCard({
             translatedText={testimony.translatedText}
             isFeatured={isFeatured}
             showExpandLink={showExpandLink}
+            showExpandOriginal={showExpandOriginal}
+            showExpandEdited={showExpandEdited}
+            showExpandTranslated={showExpandTranslated}
           />
         </div>
 
         <footer className="mt-6 flex items-center justify-between border-t border-border pt-3">
           {/* Share — always visible */}
-          {!isPlaceholder && (
+          {/* {!isPlaceholder && (
             <SharePopover
               testimonyId={testimony._id}
               originalText={testimony.originalText}
               locale={locale}
               storyUrl={storyUrl}
             />
-          )}
+          )} */}
 
           <div className="flex items-center gap-3 ml-auto">
             {/* Edit / Delete — own stories only */}

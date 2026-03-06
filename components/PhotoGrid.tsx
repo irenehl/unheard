@@ -6,6 +6,7 @@ import { useQuery } from "convex/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Camera, ChevronLeft, ChevronRight } from "lucide-react";
 import { PhotoCard, type PhotoProfile } from "./PhotoCard";
+import { PhotoUploadModal } from "./PhotoUploadModal";
 import { api } from "@/convex/_generated/api";
 import { useShouldReduceMotion } from "@/lib/motionPrefs";
 
@@ -13,6 +14,68 @@ const EASE = [0.25, 0, 0, 1] as [number, number, number, number];
 const VISIBLE_DESKTOP = 4;
 const AUTOPLAY_MS = 4000;
 const SLIDE_MS = 600;
+
+const COLOR_FADE_IN_MS = 800;
+const COLOR_HOLD_MS = 4000;
+const COLOR_FADE_OUT_MS = 600;
+const COLOR_GAP_MS = 200;
+
+// ─── Color cycle hook ─────────────────────────────────────────────────────────
+
+/**
+ * Cycles through photos sequentially, returning the _id of the currently
+ * "active" photo (in color). Returns null during the gap between cards.
+ *
+ * Timing per card: fade-in (800ms) → hold (4s) → fade-out (600ms) → gap (200ms)
+ */
+function useColorCycle(photos: PhotoProfile[]) {
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const photosRef = useRef(photos);
+  photosRef.current = photos;
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const clearTimeouts = useCallback(() => {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
+  }, []);
+
+  const startFrom = useCallback(
+    (idx: number) => {
+      clearTimeouts();
+      const ps = photosRef.current;
+      if (ps.length === 0) {
+        setActiveId(null);
+        return;
+      }
+
+      const i = ((idx % ps.length) + ps.length) % ps.length;
+      setActiveId(ps[i]._id);
+
+      const t1 = setTimeout(() => {
+        setActiveId(null);
+
+        const t2 = setTimeout(() => {
+          startFrom(i + 1);
+        }, COLOR_FADE_OUT_MS + COLOR_GAP_MS);
+        timeoutsRef.current.push(t2);
+      }, COLOR_FADE_IN_MS + COLOR_HOLD_MS);
+      timeoutsRef.current.push(t1);
+    },
+    [clearTimeouts],
+  );
+
+  useEffect(() => {
+    if (photos.length > 0) {
+      startFrom(0);
+    } else {
+      setActiveId(null);
+    }
+    return clearTimeouts;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photos.length]);
+
+  return { activeId, startFrom };
+}
 
 // ─── Desktop conveyor belt ────────────────────────────────────────────────────
 
@@ -40,12 +103,18 @@ function DesktopGrid({
   const [isInView, setIsInView] = useState(false);
   const slidingRef = useRef(false);
 
-  // Keep items in sync when query refreshes
+  const { activeId: activeColorId } = useColorCycle(photos);
+
+  // Keep items in sync when query refreshes — only reset when the actual
+  // data changes (new/removed photos), not on every sliding state change.
+  const photosKeyRef = useRef("");
   useEffect(() => {
-    if (!sliding) {
+    const key = photos.map((p) => p._id).join(",");
+    if (key !== photosKeyRef.current) {
+      photosKeyRef.current = key;
       setItems(ensureMinLength(photos, VISIBLE_DESKTOP + 1));
     }
-  }, [photos, sliding]);
+  }, [photos]);
 
   // Measure card width via ResizeObserver
   useEffect(() => {
@@ -74,7 +143,6 @@ function DesktopGrid({
     setSliding(true);
 
     setTimeout(() => {
-      // Rotate: move first item to end, snap to position 0
       setItems((prev) => {
         const next = [...prev.slice(1), prev[0]];
         return next;
@@ -118,20 +186,18 @@ function DesktopGrid({
   const visible = items.slice(0, VISIBLE_DESKTOP + 1);
 
   return (
-    <div className="relative">
-      {/* Grid + overflow clip */}
+    <div className="relative h-full">
       <div
         ref={containerRef}
-        className="overflow-hidden"
+        className="overflow-hidden h-full"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onFocusCapture={() => setIsFocused(true)}
         onBlurCapture={() => setIsFocused(false)}
-        style={{ minHeight: cardWidth || undefined }}
       >
         <div
           ref={trackRef}
-          className="flex"
+          className="flex h-full"
           style={{
             transform: sliding ? `translateX(-${cardWidth}px)` : "translateX(0)",
             transition: sliding ? `transform ${SLIDE_MS}ms cubic-bezier(0.4, 0, 0.2, 1)` : "none",
@@ -141,34 +207,43 @@ function DesktopGrid({
           {visible.map((photo, i) => (
             <div
               key={`${photo._id}-${i}`}
-              style={{ width: cardWidth || `${100 / visible.length}%`, flexShrink: 0 }}
+              className="border-r border-white/15 last:border-r-0"
+              style={{ width: cardWidth || `${100 / visible.length}%`, flexShrink: 0, height: "100%" }}
             >
-              <PhotoCard photo={photo} index={i} priority={i < VISIBLE_DESKTOP} />
+              <PhotoCard
+                photo={photo}
+                index={i}
+                priority={i < VISIBLE_DESKTOP}
+                isColorActive={photo._id === activeColorId}
+              />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Navigation arrows */}
-      <div className="flex items-center justify-between mt-3">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={retreat}
-            aria-label={t("navPrev")}
-            className="flex items-center justify-center h-8 w-8 border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <ChevronLeft className="h-4 w-4" aria-hidden />
-          </button>
-          <button
-            onClick={advance}
-            aria-label={t("navNext")}
-            className="flex items-center justify-center h-8 w-8 border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <ChevronRight className="h-4 w-4" aria-hidden />
-          </button>
-        </div>
+      {/* Overlaid nav arrows */}
+      <button
+        onClick={retreat}
+        aria-label={t("navPrev")}
+        className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center h-10 w-10 bg-black/40 backdrop-blur-sm border border-white/20 text-white/80 hover:text-white hover:border-white/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <ChevronLeft className="h-5 w-5" aria-hidden />
+      </button>
+      <button
+        onClick={advance}
+        aria-label={t("navNext")}
+        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center h-10 w-10 bg-black/40 backdrop-blur-sm border border-white/20 text-white/80 hover:text-white hover:border-white/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <ChevronRight className="h-5 w-5" aria-hidden />
+      </button>
 
-        <UploadButton onClick={onUploadClick} label={t("uploadCta")} />
+      <div
+        className="absolute bottom-0 inset-x-0 z-10 flex justify-end px-4 pointer-events-none"
+        style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="pointer-events-auto">
+          <UploadButton onClick={onUploadClick} label={t("uploadCta")} />
+        </div>
       </div>
     </div>
   );
@@ -186,23 +261,38 @@ function TabletGrid({
   const t = useTranslations("gallery");
   const shouldReduceMotion = useShouldReduceMotion();
 
+  const visiblePhotos = photos.slice(0, 8);
+  const { activeId } = useColorCycle(visiblePhotos);
+
   return (
-    <div>
-      <div className="grid grid-cols-2 gap-px bg-border">
-        {photos.slice(0, 8).map((photo, i) => (
+    <div className="relative h-full">
+      <div className="grid grid-cols-2 gap-px bg-border h-full">
+        {visiblePhotos.map((photo, i) => (
           <motion.div
             key={photo._id}
+            className="h-full"
             initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 14 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-40px" }}
             transition={{ duration: 0.4, ease: EASE, delay: shouldReduceMotion ? 0 : i * 0.06 }}
           >
-            <PhotoCard photo={photo} index={i} priority={i < 2} />
+            <PhotoCard
+              photo={photo}
+              index={i}
+              priority={i < 2}
+              isColorActive={photo._id === activeId}
+            />
           </motion.div>
         ))}
       </div>
-      <div className="flex justify-end mt-3">
-        <UploadButton onClick={onUploadClick} label={t("uploadCta")} />
+
+      <div
+        className="absolute bottom-0 inset-x-0 z-10 flex justify-end px-4 pointer-events-none"
+        style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="pointer-events-auto">
+          <UploadButton onClick={onUploadClick} label={t("uploadCta")} />
+        </div>
       </div>
     </div>
   );
@@ -222,6 +312,9 @@ function MobileCarousel({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
   const autoplayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isAutoScrollingRef = useRef(false);
+
+  const { activeId, startFrom } = useColorCycle(photos);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -237,10 +330,14 @@ function MobileCarousel({
     autoplayRef.current = setInterval(() => {
       const el = scrollRef.current;
       if (!el) return;
-      const cardW = el.clientWidth * 0.9;
+      isAutoScrollingRef.current = true;
+      const cardW = el.clientWidth;
       const maxScroll = el.scrollWidth - el.clientWidth;
       const next = el.scrollLeft + cardW;
       el.scrollTo({ left: next > maxScroll ? 0 : next, behavior: "smooth" });
+      setTimeout(() => {
+        isAutoScrollingRef.current = false;
+      }, SLIDE_MS + 100);
     }, AUTOPLAY_MS);
 
     return () => {
@@ -248,26 +345,52 @@ function MobileCarousel({
     };
   }, [isInView, shouldReduceMotion]);
 
+  // Reset color cycle when user manually swipes to a new card
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const onScrollEnd = () => {
+      if (isAutoScrollingRef.current) return;
+      const visibleIdx = Math.round(el.scrollLeft / el.clientWidth);
+      startFrom(visibleIdx);
+    };
+
+    el.addEventListener("scrollend", onScrollEnd);
+    return () => el.removeEventListener("scrollend", onScrollEnd);
+  }, [startFrom]);
+
   return (
-    <div>
+    <div className="relative h-full">
       <div
         ref={scrollRef}
-        className="flex overflow-x-auto scrollbar-hide gap-px bg-border"
+        className="flex overflow-x-auto scrollbar-hide h-full"
         style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
         aria-label={t("sectionLabel")}
       >
         {photos.map((photo, i) => (
           <div
             key={photo._id}
-            className="shrink-0 bg-background"
-            style={{ width: "90%", scrollSnapAlign: "start" }}
+            className="shrink-0 h-full"
+            style={{ width: "100%", scrollSnapAlign: "start" }}
           >
-            <PhotoCard photo={photo} index={i} priority={i === 0} />
+            <PhotoCard
+              photo={photo}
+              index={i}
+              priority={i === 0}
+              isColorActive={photo._id === activeId}
+            />
           </div>
         ))}
       </div>
-      <div className="flex justify-end mt-3">
-        <UploadButton onClick={onUploadClick} label={t("uploadCta")} />
+
+      <div
+        className="absolute bottom-0 inset-x-0 z-10 flex justify-end px-4 pointer-events-none"
+        style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="pointer-events-auto">
+          <UploadButton onClick={onUploadClick} label={t("uploadCta")} />
+        </div>
       </div>
     </div>
   );
@@ -279,7 +402,7 @@ function UploadButton({ onClick, label }: { onClick: () => void; label: string }
   return (
     <motion.button
       onClick={onClick}
-      className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground border border-border hover:border-foreground px-3 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase bg-black/40 backdrop-blur-sm text-white/80 hover:text-white border border-white/20 hover:border-white/50 px-3 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
     >
       <Camera className="h-3 w-3" aria-hidden />
@@ -303,44 +426,66 @@ function ensureMinLength(photos: PhotoProfile[], min: number): PhotoProfile[] {
 
 export function PhotoGrid() {
   const t = useTranslations("gallery");
-  const shouldReduceMotion = useShouldReduceMotion();
   const rawProfiles = useQuery(api.profiles.list);
+  const rawStoryPhotos = useQuery(api.testimonies.listCarouselPhotos);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const rootRef = useRef<HTMLElement>(null);
 
-  // Lazy-load modal to avoid SSR issues
-  const [ModalComponent, setModalComponent] = useState<React.ComponentType<{ onClose: () => void }> | null>(null);
+  const profilePhotos: PhotoProfile[] = (rawProfiles ?? [])
+    .filter((p) => p.photoUrl !== null)
+    .map((p) => ({
+      _id: p._id,
+      name: p.name,
+      profession: p.profession,
+      country: p.country,
+      photoUrl: p.photoUrl,
+      createdAt: p.createdAt,
+    })) as PhotoProfile[];
 
-  useEffect(() => {
-    if (uploadOpen && !ModalComponent) {
-      import("./PhotoUploadModal").then((m) => setModalComponent(() => m.PhotoUploadModal));
-    }
-  }, [uploadOpen, ModalComponent]);
+  const storyPhotos: PhotoProfile[] = (rawStoryPhotos ?? [])
+    .filter((s) => s.photoUrl !== null)
+    .map((s) => ({
+      _id: s._id,
+      name:
+        s.type === "honor"
+          ? (s.subjectName ?? "")
+          : s.isAnonymous
+            ? ""
+            : (s.authorName ?? ""),
+      profession:
+        s.type === "honor"
+          ? (s.subjectProfession ?? "")
+          : s.isAnonymous
+            ? ""
+            : (s.authorProfession ?? ""),
+      country:
+        s.type === "honor"
+          ? (s.subjectCountry ?? "")
+          : s.isAnonymous
+            ? ""
+            : (s.authorCountry ?? ""),
+      photoUrl: s.photoUrl,
+      createdAt: s.createdAt,
+    })) as PhotoProfile[];
 
-  const photos: PhotoProfile[] = (rawProfiles ?? []).filter((p) => p.photoUrl !== null) as PhotoProfile[];
+  const photos: PhotoProfile[] = [...profilePhotos, ...storyPhotos]
+    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
 
-  const staggerVariants = {
-    hidden: {},
-    visible: { transition: { staggerChildren: shouldReduceMotion ? 0 : 0.06 } },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 14 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE } },
-  };
+  
 
   // Loading / empty state
-  if (rawProfiles === undefined) {
+  if (rawProfiles === undefined || rawStoryPhotos === undefined) {
     return (
-      <section aria-label={t("sectionLabel")} className="py-10">
-        <div className="h-64 bg-secondary animate-pulse" />
+      <section ref={rootRef} aria-label={t("sectionLabel")} className="w-screen h-screen" style={{ height: "100dvh" }}>
+        <div className="h-full bg-secondary animate-pulse" />
       </section>
     );
   }
 
   if (photos.length === 0) {
     return (
-      <section aria-label={t("sectionLabel")} className="py-10">
-        <div className="border border-border border-dashed flex flex-col items-center justify-center py-16 gap-4">
+      <section ref={rootRef} aria-label={t("sectionLabel")} className="w-screen h-screen" style={{ height: "100dvh" }}>
+        <div className="border border-border border-dashed flex h-full flex-col items-center justify-center gap-4">
           <Camera className="h-8 w-8 text-muted-foreground" aria-hidden />
           <motion.button
             onClick={() => setUploadOpen(true)}
@@ -350,31 +495,31 @@ export function PhotoGrid() {
             {t("uploadCta")}
           </motion.button>
         </div>
-        {uploadOpen && ModalComponent && <ModalComponent onClose={() => setUploadOpen(false)} />}
+        {uploadOpen && <PhotoUploadModal onClose={() => setUploadOpen(false)} />}
       </section>
     );
   }
 
   return (
-    <section aria-label={t("sectionLabel")} className="py-10">
+    <section ref={rootRef} aria-label={t("sectionLabel")} className="w-screen h-screen" style={{ height: "100dvh" }}>
       {/* Mobile carousel */}
-      <div className="block md:hidden">
+      <div className="block md:hidden h-full">
         <MobileCarousel photos={photos} onUploadClick={() => setUploadOpen(true)} />
       </div>
 
       {/* Tablet 2-column grid */}
-      <div className="hidden md:block lg:hidden">
+      <div className="hidden md:block lg:hidden h-full">
         <TabletGrid photos={photos} onUploadClick={() => setUploadOpen(true)} />
       </div>
 
       {/* Desktop conveyor belt */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block h-full">
         <DesktopGrid photos={photos} onUploadClick={() => setUploadOpen(true)} />
       </div>
 
       {/* Upload modal */}
       <AnimatePresence>
-        {uploadOpen && ModalComponent && <ModalComponent onClose={() => setUploadOpen(false)} />}
+        {uploadOpen && <PhotoUploadModal onClose={() => setUploadOpen(false)} />}
       </AnimatePresence>
     </section>
   );

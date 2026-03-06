@@ -67,6 +67,14 @@ export default async function EditStoryPage({
         locale={locale}
         initialCategory={testimony.category}
         initialText={testimony.originalText}
+        initialPhotoUrl={testimony.photoUrl}
+        initialSubjectName={testimony.subjectName}
+        initialSubjectProfession={testimony.subjectProfession}
+        initialSubjectCountry={testimony.subjectCountry}
+        initialAuthorProfession={testimony.authorProfession}
+        initialAuthorCountry={testimony.authorCountry}
+        isHonor={testimony.type === "honor"}
+        isAnonymous={testimony.isAnonymous}
       />
     </div>
   );

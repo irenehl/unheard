@@ -11,6 +11,7 @@ import { Heart, Mic } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { cache } from "react";
+import Image from "next/image";
 
 // Cache the testimony fetch to avoid double-fetching in generateMetadata and page component
 const getTestimony = cache(async (id: Id<"testimonies">) => {
@@ -141,6 +142,7 @@ export default async function StoryPage({
     },
     inLanguage: locale,
     url: url,
+    image: testimony.photoUrl ?? undefined,
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": url,
@@ -164,12 +166,12 @@ export default async function StoryPage({
           >
             {t("common.backToFront")}
           </Link>
-          <SharePopover
+          {/* <SharePopover
             testimonyId={testimony._id}
             originalText={testimony.originalText}
             locale={locale}
             storyUrl={url}
-          />
+          /> */}
         </div>
 
         <header className="mb-12 border-b border-border pb-8">
@@ -220,6 +222,20 @@ export default async function StoryPage({
             )}
             <StoryDeleteButton testimonyId={id} locale={locale} />
           </div>
+        )}
+
+        {testimony.photoUrl && (
+          <figure className="mb-10 overflow-hidden border border-border">
+            <Image
+              src={testimony.photoUrl}
+              alt={t("submit.photoPreviewAlt")}
+              width={0}
+              height={0}
+              sizes="(max-width: 768px) 100vw, 896px"
+              className="w-full h-auto max-h-[75vh] object-contain grayscale"
+              priority
+            />
+          </figure>
         )}
 
         <div className="prose-lg max-w-none">

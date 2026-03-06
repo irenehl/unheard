@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { useUser, useSignIn } from "@clerk/nextjs";
 import { X, Upload } from "lucide-react";
@@ -10,6 +11,7 @@ import { useShouldReduceMotion } from "@/lib/motionPrefs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { validateImageFile } from "@/lib/imageUpload";
 
 const EASE = [0.25, 0, 0, 1] as [number, number, number, number];
 
@@ -45,22 +47,40 @@ export function PhotoUploadModal({ onClose }: { onClose: () => void }) {
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [errorKey, setErrorKey] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   const transitionDuration = shouldReduceMotion ? 0 : undefined;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
 
-    if (f.size > 5 * 1024 * 1024) {
+    const fileError = validateImageFile(f);
+    if (fileError === "size") {
       setErrorMsg(t("errorSize"));
       setErrorKey((k) => k + 1);
       return;
     }
-    if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) {
+    if (fileError === "type") {
       setErrorMsg(t("errorFormat"));
       setErrorKey((k) => k + 1);
       return;
+    }
+
+    if (previewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
     }
 
     setFile(f);
@@ -102,12 +122,14 @@ export function PhotoUploadModal({ onClose }: { onClose: () => void }) {
     }
   }
 
+  if (!mounted) return null;
+
   // Backdrop + dialog — close on backdrop click
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         key="backdrop"
-        className="fixed inset-0 z-40 bg-foreground/60 backdrop-blur-sm"
+        className="fixed inset-0 z-80 bg-foreground/60 backdrop-blur-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1, transition: { duration: shouldReduceMotion ? 0 : 0.2 } }}
         exit={{ opacity: 0, transition: { duration: shouldReduceMotion ? 0 : 0.15 } }}
@@ -120,13 +142,13 @@ export function PhotoUploadModal({ onClose }: { onClose: () => void }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="upload-modal-title"
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+        className="fixed inset-0 z-90"
         initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.96, y: shouldReduceMotion ? 0 : 12 }}
         animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: shouldReduceMotion ? 0 : 0.25, ease: EASE } }}
         exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.96, y: shouldReduceMotion ? 0 : 12, transition: { duration: shouldReduceMotion ? 0 : 0.18 } }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="bg-background border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="bg-background w-screen h-screen overflow-y-auto">
           {/* Header */}
           <div className="flex items-start justify-between p-6 border-b border-border">
             <div>
@@ -330,6 +352,7 @@ export function PhotoUploadModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

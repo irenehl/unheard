@@ -27,6 +27,9 @@ interface VersionPanelProps {
   isFeatured?: boolean;
   isFullPage?: boolean;
   showExpandLink?: boolean;
+  showExpandOriginal?: boolean;
+  showExpandEdited?: boolean;
+  showExpandTranslated?: boolean;
 }
 
 type Tab = "original" | "edited" | "translated";
@@ -62,7 +65,7 @@ function getServerSnapshot(): ReadingPrefs {
   return DEFAULT_PREFS;
 }
 
-const TRUNCATE_LENGTH = 350;
+const TRUNCATE_LENGTH = 510;
 
 export function VersionPanel({
   testimonyId,
@@ -73,7 +76,13 @@ export function VersionPanel({
   isFeatured = false,
   isFullPage = false,
   showExpandLink = false,
+  showExpandOriginal = false,
+  showExpandEdited = false,
+  showExpandTranslated = false,
 }: VersionPanelProps) {
+  // #region agent log
+  fetch('http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d1fc6'},body:JSON.stringify({sessionId:'9d1fc6',location:'VersionPanel.tsx:67',message:'VersionPanel props received',data:{testimonyId,originalTextLength:originalText.length,editedTextLength:editedText.length,showExpandLink,showExpandOriginal,showExpandEdited,showExpandTranslated,TRUNCATE_LENGTH},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   const t = useTranslations("versionPanel");
   const locale = useLocale();
 
@@ -104,32 +113,34 @@ export function VersionPanel({
     }
   };
 
-  function renderText(text: string) {
-    if (isFullPage || showExpandLink) return text;
+  function renderText(text: string, hasMoreForTab: boolean) {
+    if (isFullPage || hasMoreForTab) return text;
     if (text.length <= TRUNCATE_LENGTH) return text;
     return text.slice(0, TRUNCATE_LENGTH).trim() + "…";
   }
 
-  function renderExpandLink(textLength: number) {
+  function renderExpandLink(textLength: number, hasMoreForTab: boolean) {
+    const shouldShow = hasMoreForTab || textLength > TRUNCATE_LENGTH;
+    // #region agent log
+    fetch('http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d1fc6'},body:JSON.stringify({sessionId:'9d1fc6',location:'VersionPanel.tsx:113',message:'renderExpandLink called',data:{testimonyId,activeTab,textLength,TRUNCATE_LENGTH,showExpandLink,hasMoreForTab,isFullPage,shouldShow},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     if (isFullPage) return null;
     if (String(testimonyId).startsWith("placeholder")) return null;
-    if (showExpandLink) {
-      return (
-        <Link
-          href={`/${locale}/story/${testimonyId}`}
-          className="mt-4 text-[10px] font-bold tracking-widest uppercase text-foreground hover:text-primary transition-colors inline-block border-b border-foreground pb-0.5"
-        >
-          [ Read full story ]
-        </Link>
-      );
+    if (!shouldShow) {
+      // #region agent log
+      fetch('http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d1fc6'},body:JSON.stringify({sessionId:'9d1fc6',location:'VersionPanel.tsx:117',message:'renderExpandLink returning null',data:{activeTab,textLength,TRUNCATE_LENGTH,showExpandLink,hasMoreForTab,shouldShow},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      return null;
     }
-    if (textLength <= TRUNCATE_LENGTH) return null;
+    // #region agent log
+    fetch('http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d1fc6'},body:JSON.stringify({sessionId:'9d1fc6',location:'VersionPanel.tsx:118',message:'renderExpandLink returning Link component',data:{activeTab,textLength,TRUNCATE_LENGTH,showExpandLink,hasMoreForTab,shouldShow},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     return (
       <Link
         href={`/${locale}/story/${testimonyId}`}
         className="mt-4 text-[10px] font-bold tracking-widest uppercase text-foreground hover:text-primary transition-colors inline-block border-b border-foreground pb-0.5"
       >
-        [ Read full story ]
+        [ {t("readFullStory")} ]
       </Link>
     );
   }
@@ -139,42 +150,61 @@ export function VersionPanel({
     isFeatured ? "text-xl md:text-2xl" : ""
   } first-letter:float-left first-letter:text-5xl first-letter:pr-2 first-letter:font-bold first-letter:font-display first-letter:leading-[0.8] first-line:tracking-wide`;
 
-  const contentMap: Record<Tab, React.ReactNode> = {
-    original: (
-      <>
-        <p lang={originalLanguage} className={textClass}>
-          {renderText(originalText)}
-        </p>
-        {renderExpandLink(originalText.length)}
-      </>
-    ),
-    edited: (
-      <>
-        <p lang={originalLanguage} className={textClass}>
-          {renderText(editedText)}
-        </p>
-        {renderExpandLink(editedText.length)}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.3, delay: 0.25 }}
-        >
-          <Badge
-            variant="outline"
-            className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
+  // Render content conditionally based on activeTab to avoid evaluating all tabs
+  function renderTabContent() {
+    const translated = translatedText[locale] ?? "";
+    const hasMoreByTab: Record<Tab, boolean> = {
+      original: showExpandOriginal,
+      edited: showExpandEdited,
+      translated: showExpandTranslated,
+    };
+
+    // #region agent log
+    fetch('http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'9d1fc6'},body:JSON.stringify({sessionId:'9d1fc6',location:'VersionPanel.tsx:renderTabContent',message:'Rendering tab content',data:{testimonyId,activeTab,originalTextLength:originalText.length,editedTextLength:editedText.length,translatedTextLength:translated.length,showExpandLink,showExpandOriginal,showExpandEdited,showExpandTranslated,activeTabHasMore:hasMoreByTab[activeTab]},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    
+    if (activeTab === "original") {
+      return (
+        <>
+          <p lang={originalLanguage} className={textClass}>
+            {renderText(originalText, showExpandOriginal)}
+          </p>
+          {renderExpandLink(originalText.length, showExpandOriginal)}
+        </>
+      );
+    }
+    
+    if (activeTab === "edited") {
+      return (
+        <>
+          <p lang={originalLanguage} className={textClass}>
+            {renderText(editedText, showExpandEdited)}
+          </p>
+          {renderExpandLink(editedText.length, showExpandEdited)}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.3, delay: 0.25 }}
           >
-            <Sparkles className="h-3 w-3" />
-            {t("editedBadge")}
-          </Badge>
-        </motion.div>
-      </>
-    ),
-    translated: (
+            <Badge
+              variant="outline"
+              className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
+            >
+              <Sparkles className="h-3 w-3" />
+              {t("editedBadge")}
+            </Badge>
+          </motion.div>
+        </>
+      );
+    }
+    
+    // activeTab === "translated"
+    return (
       <>
         <p lang={locale} className={textClass}>
-          {renderText(translatedText[locale] ?? "")}
+          {renderText(translated, showExpandTranslated)}
         </p>
-        {renderExpandLink((translatedText[locale] ?? "").length)}
+        {renderExpandLink(translated.length, showExpandTranslated)}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -189,8 +219,8 @@ export function VersionPanel({
           </Badge>
         </motion.div>
       </>
-    ),
-  };
+    );
+  }
 
   return (
     <div>
@@ -254,7 +284,7 @@ export function VersionPanel({
             animate={{ opacity: 1, transition: shouldReduceMotion ? { duration: 0 } : { duration: 0.2, delay: 0.05 } }}
             exit={{ opacity: 0, transition: { duration: shouldReduceMotion ? 0 : 0.15 } }}
           >
-            {contentMap[activeTab]}
+            {renderTabContent()}
           </motion.div>
         </AnimatePresence>
       </div>

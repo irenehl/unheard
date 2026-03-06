@@ -53,6 +53,23 @@ export default async function LocaleLayout({
   const { locale } = await params;
   const messages = await getMessages();
 
+  // #region agent log
+  await fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "269760" },
+    body: JSON.stringify({
+      sessionId: "269760",
+      runId: "run3",
+      hypothesisId: "H8",
+      location: "app/[locale]/layout.tsx:LocaleLayout",
+      message: "Locale layout executed",
+      data: { locale },
+      timestamp: Date.now(),
+    }),
+    cache: "no-store",
+  }).catch(() => {});
+  // #endregion
+
   return (
     <ClerkProvider>
       <ConvexClientProvider>

@@ -41,6 +41,10 @@ type FeedItem = {
   editedText: string;
   translatedText: Record<string, string>;
   hasMoreContent?: boolean;
+  hasMoreOriginal?: boolean;
+  hasMoreEdited?: boolean;
+  hasMoreTranslated?: boolean;
+  photoUrl?: string | null;
 };
 
 type FeedPage = {
@@ -61,10 +65,9 @@ const containerVariants: Variants = {
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 14 },
+  hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    y: 0,
     transition: { duration: 0.4, ease: EASE },
   },
 };
@@ -173,21 +176,23 @@ export function FeedClient({
             exit="exit"
             className="border-t-[3px] border-b-[3px] border-foreground mt-8 mb-12"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border">
-              {items.map((testimony, index) => {
-                const isFirst = index === 0;
+            <div className="columns-1 gap-x-px md:columns-2 lg:columns-3 bg-border">
+              {items.map((testimony) => {
                 return (
                   <m.div
                     key={testimony._id}
                     variants={shouldReduceMotion ? { hidden: {}, visible: {} } : itemVariants}
-                    className={`bg-background ${isFirst ? "md:col-span-2 lg:col-span-2" : ""}`}
+                    className="mb-px w-full break-inside-avoid bg-background"
                   >
                     <TestimonyCard
                       testimony={testimony}
-                      isFeatured={isFirst}
+                      isFeatured={false}
                       currentUserId={user?.id}
                       locale={locale}
                       showExpandLink={Boolean(testimony.hasMoreContent)}
+                      showExpandOriginal={Boolean(testimony.hasMoreOriginal)}
+                      showExpandEdited={Boolean(testimony.hasMoreEdited)}
+                      showExpandTranslated={Boolean(testimony.hasMoreTranslated)}
                     />
                   </m.div>
                 );

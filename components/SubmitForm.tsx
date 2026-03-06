@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, CheckCircle2, Heart, Mic } from "lucide-react";
+import { Loader2, CheckCircle2, Heart, Mic, Upload, X } from "lucide-react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useShouldReduceMotion } from "@/lib/motionPrefs";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { validateImageFile } from "@/lib/imageUpload";
 
 const CATEGORIES = [
   "work",
@@ -62,30 +64,113 @@ export function SubmitForm() {
   const [type, setType] = useState<Type>("honor");
   const [category, setCategory] = useState<Category>("work");
   const [text, setText] = useState("");
+  const [subjectName, setSubjectName] = useState("");
+  const [subjectProfession, setSubjectProfession] = useState("");
+  const [subjectCountry, setSubjectCountry] = useState("");
   const [authorName, setAuthorName] = useState("");
+  const [authorProfession, setAuthorProfession] = useState("");
+  const [authorCountry, setAuthorCountry] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState(0);
-  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const transitionDuration = shouldReduceMotion ? 0 : undefined;
+
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+    };
+  }, [photoPreviewUrl]);
+
+  function clearPhoto() {
+    if (photoPreviewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(photoPreviewUrl);
+    }
+    setPhotoFile(null);
+    setPhotoPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+
+    const fileError = validateImageFile(selected);
+    if (fileError === "size") {
+      setErrorMessage(t("errorPhotoSize"));
+      setStatus("error");
+      setErrorKey((k) => k + 1);
+      return;
+    }
+    if (fileError === "type") {
+      setErrorMessage(t("errorPhotoFormat"));
+      setStatus("error");
+      setErrorKey((k) => k + 1);
+      return;
+    }
+
+    if (photoPreviewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(photoPreviewUrl);
+    }
+
+    setPhotoFile(selected);
+    setPhotoPreviewUrl(URL.createObjectURL(selected));
+    setErrorMessage(null);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!text.trim()) return;
     setStatus("submitting");
+    setErrorMessage(null);
 
     try {
+      const formData = new FormData();
+      formData.append("type", type);
+      formData.append("category", category);
+      formData.append("text", text);
+      formData.append("authorName", authorName);
+      formData.append("isAnonymous", String(isAnonymous));
+      if (type === "honor" && subjectName.trim()) {
+        formData.append("subjectName", subjectName.trim());
+      }
+      if (type === "honor" && subjectProfession.trim()) {
+        formData.append("subjectProfession", subjectProfession.trim());
+      }
+      if (type === "honor" && subjectCountry.trim()) {
+        formData.append("subjectCountry", subjectCountry.trim());
+      }
+      if (type === "tell" && !isAnonymous && authorProfession.trim()) {
+        formData.append("authorProfession", authorProfession.trim());
+      }
+      if (type === "tell" && !isAnonymous && authorCountry.trim()) {
+        formData.append("authorCountry", authorCountry.trim());
+      }
+      if (photoFile) formData.append("photo", photoFile);
+
       const res = await fetch("/api/submit", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, category, text, authorName, isAnonymous }),
+        body: formData,
       });
       if (!res.ok) throw new Error("Submit failed");
       setStatus("success");
       setText("");
+      setSubjectName("");
+      setSubjectProfession("");
+      setSubjectCountry("");
       setAuthorName("");
+      setAuthorProfession("");
+      setAuthorCountry("");
+      clearPhoto();
     } catch {
       setStatus("error");
+      setErrorMessage(t("errorGeneric"));
       setErrorKey((k) => k + 1); // re-trigger shake animation
     }
   }
@@ -275,6 +360,113 @@ export function SubmitForm() {
 
           {/* Author name */}
           <motion.div variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants} className="space-y-3">
+            <Label className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground">
+              {t("photoLabel")}
+            </Label>
+            <div className="space-y-3">
+              <input
+                ref={fileInputRef}
+                id="submit-photo"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handlePhotoChange}
+                className="sr-only"
+              />
+              <label
+                htmlFor="submit-photo"
+                className="flex items-center gap-3 w-full border border-border bg-transparent px-4 py-3 cursor-pointer hover:border-foreground transition-colors group"
+              >
+                <Upload className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" aria-hidden />
+                <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors truncate">
+                  {photoFile ? `${t("photoSelected")}: ${photoFile.name}` : t("photoSelect")}
+                </span>
+              </label>
+              <p className="text-[10px] tracking-widest uppercase text-muted-foreground">
+                {t("photoHint")}
+              </p>
+
+              {photoPreviewUrl && (
+                <div className="space-y-3">
+                  <div className="relative aspect-square w-full max-w-[220px] overflow-hidden border border-border">
+                    <Image
+                      src={photoPreviewUrl}
+                      alt={t("photoPreviewAlt")}
+                      fill
+                      className="object-cover grayscale"
+                      sizes="220px"
+                      unoptimized
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={clearPhoto}
+                    className="rounded-none border-border text-[10px] tracking-[0.2em] uppercase"
+                  >
+                    <X className="mr-1 h-3 w-3" aria-hidden />
+                    {t("photoRemove")}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Subject name (honor type only) */}
+          {type === "honor" && (
+            <>
+              <motion.div variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants} className="space-y-3">
+                <Label
+                  htmlFor="subject-name"
+                  className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground"
+                >
+                  {t("subjectNameLabel")}
+                </Label>
+                <Input
+                  id="subject-name"
+                  type="text"
+                  value={subjectName}
+                  onChange={(e) => setSubjectName(e.target.value)}
+                  placeholder={t("subjectNamePlaceholder")}
+                  className="h-14 border border-border bg-transparent rounded-none px-4 py-4 text-base shadow-none focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground transition-colors"
+                />
+              </motion.div>
+              <motion.div variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants} className="space-y-3">
+                <Label
+                  htmlFor="subject-profession"
+                  className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground"
+                >
+                  {t("subjectProfessionLabel")}
+                </Label>
+                <Input
+                  id="subject-profession"
+                  type="text"
+                  value={subjectProfession}
+                  onChange={(e) => setSubjectProfession(e.target.value)}
+                  placeholder={t("subjectProfessionPlaceholder")}
+                  className="h-14 border border-border bg-transparent rounded-none px-4 py-4 text-base shadow-none focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground transition-colors"
+                />
+              </motion.div>
+              <motion.div variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants} className="space-y-3">
+                <Label
+                  htmlFor="subject-country"
+                  className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground"
+                >
+                  {t("subjectCountryLabel")}
+                </Label>
+                <Input
+                  id="subject-country"
+                  type="text"
+                  value={subjectCountry}
+                  onChange={(e) => setSubjectCountry(e.target.value)}
+                  placeholder={t("subjectCountryPlaceholder")}
+                  className="h-14 border border-border bg-transparent rounded-none px-4 py-4 text-base shadow-none focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground transition-colors"
+                />
+              </motion.div>
+            </>
+          )}
+
+          {/* Author name */}
+          <motion.div variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants} className="space-y-3">
             <Label
               htmlFor="author-name"
               className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground"
@@ -292,6 +484,45 @@ export function SubmitForm() {
             />
           </motion.div>
 
+          {type === "tell" && (
+            <>
+              <motion.div variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants} className="space-y-3">
+                <Label
+                  htmlFor="author-profession"
+                  className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground"
+                >
+                  {t("authorProfessionLabel")}
+                </Label>
+                <Input
+                  id="author-profession"
+                  type="text"
+                  value={authorProfession}
+                  onChange={(e) => setAuthorProfession(e.target.value)}
+                  placeholder={t("authorProfessionPlaceholder")}
+                  disabled={isAnonymous}
+                  className="h-14 border border-border bg-transparent rounded-none px-4 py-4 text-base shadow-none focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </motion.div>
+              <motion.div variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants} className="space-y-3">
+                <Label
+                  htmlFor="author-country"
+                  className="font-mono text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground"
+                >
+                  {t("authorCountryLabel")}
+                </Label>
+                <Input
+                  id="author-country"
+                  type="text"
+                  value={authorCountry}
+                  onChange={(e) => setAuthorCountry(e.target.value)}
+                  placeholder={t("authorCountryPlaceholder")}
+                  disabled={isAnonymous}
+                  className="h-14 border border-border bg-transparent rounded-none px-4 py-4 text-base shadow-none focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </motion.div>
+            </>
+          )}
+
           {/* Anonymous toggle */}
           <motion.div
             variants={shouldReduceMotion ? { hidden: {}, visible: {} } : fieldVariants}
@@ -300,7 +531,14 @@ export function SubmitForm() {
             <Checkbox
               id="anonymous"
               checked={isAnonymous}
-              onCheckedChange={(v) => setIsAnonymous(Boolean(v))}
+              onCheckedChange={(v) => {
+                const nextValue = Boolean(v);
+                setIsAnonymous(nextValue);
+                if (nextValue) {
+                  setAuthorProfession("");
+                  setAuthorCountry("");
+                }
+              }}
               className="h-5 w-5 rounded-none border-foreground data-[state=checked]:bg-foreground data-[state=checked]:text-background"
             />
             <Label
@@ -330,7 +568,7 @@ export function SubmitForm() {
                 animate={shouldReduceMotion ? undefined : "shake"}
               >
                 <Alert variant="destructive">
-                  <AlertDescription>{t("errorGeneric")}</AlertDescription>
+                  <AlertDescription>{errorMessage ?? t("errorGeneric")}</AlertDescription>
                 </Alert>
               </motion.div>
             )}

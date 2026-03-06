@@ -58,8 +58,19 @@ export const list = query({
       }
 
       const page = await queryBuilder.paginate(paginationOpts);
+      const pageWithPhotoUrls = await Promise.all(
+        page.page.map(async (testimony) => ({
+          ...testimony,
+          photoUrl: testimony.photoStorageId
+            ? await ctx.storage.getUrl(testimony.photoStorageId)
+            : null,
+        }))
+      );
 
-      return page;
+      return {
+        ...page,
+        page: pageWithPhotoUrls,
+      };
     } catch (error) {
       console.error("Error in testimonies.list query:", error);
       throw error;
@@ -67,7 +78,7 @@ export const list = query({
   },
 });
 
-const FEED_EXCERPT_LENGTH = 360;
+const FEED_EXCERPT_LENGTH = 510;
 
 function toExcerpt(text: string) {
   if (text.length <= FEED_EXCERPT_LENGTH) return text;
@@ -115,9 +126,8 @@ export const listFeed = query({
 
     const page = await queryBuilder.paginate(paginationOpts);
 
-    return {
-      ...page,
-      page: page.page.map((testimony) => {
+    const feedItems = await Promise.all(
+      page.page.map(async (testimony) => {
         const translatedForLocale = testimony.translatedText[locale];
         return {
           _id: testimony._id,
@@ -137,12 +147,23 @@ export const listFeed = query({
           translatedText: translatedForLocale
             ? { [locale]: toExcerpt(translatedForLocale) }
             : {},
+          hasMoreOriginal: testimony.originalText.length > FEED_EXCERPT_LENGTH,
+          hasMoreEdited: testimony.editedText.length > FEED_EXCERPT_LENGTH,
+          hasMoreTranslated: (translatedForLocale?.length ?? 0) > FEED_EXCERPT_LENGTH,
           hasMoreContent:
             testimony.originalText.length > FEED_EXCERPT_LENGTH ||
             testimony.editedText.length > FEED_EXCERPT_LENGTH ||
             (translatedForLocale?.length ?? 0) > FEED_EXCERPT_LENGTH,
+          photoUrl: testimony.photoStorageId
+            ? await ctx.storage.getUrl(testimony.photoStorageId)
+            : null,
         };
-      }),
+      })
+    );
+
+    return {
+      ...page,
+      page: feedItems,
     };
   },
 });
@@ -150,7 +171,45 @@ export const listFeed = query({
 export const getById = query({
   args: { id: v.id("testimonies") },
   handler: async (ctx, { id }) => {
-    return ctx.db.get(id);
+    const testimony = await ctx.db.get(id);
+    if (!testimony) return null;
+
+    return {
+      ...testimony,
+      photoUrl: testimony.photoStorageId
+        ? await ctx.storage.getUrl(testimony.photoStorageId)
+        : null,
+    };
+  },
+});
+
+export const listCarouselPhotos = query({
+  args: {},
+  handler: async (ctx) => {
+    const testimonies = await ctx.db
+      .query("testimonies")
+      .withIndex("by_status", (q) => q.eq("status", "published"))
+      .order("desc")
+      .collect();
+
+    const withPhotos = testimonies.filter((t) => t.photoStorageId != null);
+    const recent = withPhotos.slice(0, 40);
+
+    return Promise.all(
+      recent.map(async (t) => ({
+        _id: t._id,
+        type: t.type,
+        isAnonymous: t.isAnonymous,
+        createdAt: t.createdAt,
+        authorName: t.authorName ?? null,
+        authorProfession: t.authorProfession ?? null,
+        authorCountry: t.authorCountry ?? null,
+        subjectName: t.subjectName ?? null,
+        subjectProfession: t.subjectProfession ?? null,
+        subjectCountry: t.subjectCountry ?? null,
+        photoUrl: await ctx.storage.getUrl(t.photoStorageId!),
+      }))
+    );
   },
 });
 
@@ -183,6 +242,12 @@ export const create = mutation({
     originalLanguage: v.string(),
     editedText: v.string(),
     translatedText: v.record(v.string(), v.string()),
+    photoStorageId: v.optional(v.id("_storage")),
+    subjectName: v.optional(v.string()),
+    subjectProfession: v.optional(v.string()),
+    subjectCountry: v.optional(v.string()),
+    authorProfession: v.optional(v.string()),
+    authorCountry: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     return ctx.db.insert("testimonies", {
@@ -203,13 +268,69 @@ export const update = mutation({
     originalLanguage: v.string(),
     editedText: v.string(),
     translatedText: v.record(v.string(), v.string()),
+    photoStorageId: v.optional(v.id("_storage")),
+    photoAction: v.optional(
+      v.union(v.literal("keep"), v.literal("replace"), v.literal("remove"))
+    ),
+    subjectName: v.optional(v.string()),
+    subjectProfession: v.optional(v.string()),
+    subjectCountry: v.optional(v.string()),
+    authorProfession: v.optional(v.string()),
+    authorCountry: v.optional(v.string()),
   },
-  handler: async (ctx, { id, authorId, ...fields }) => {
+  handler: async (ctx, args) => {
+    const {
+      id,
+      authorId,
+      category,
+      originalText,
+      originalLanguage,
+      editedText,
+      translatedText,
+      photoStorageId,
+      photoAction = "keep",
+      subjectName,
+      subjectProfession,
+      subjectCountry,
+      authorProfession,
+      authorCountry,
+    } = args;
     const testimony = await ctx.db.get(id);
     if (!testimony) throw new Error("Testimony not found");
     if (!testimony.authorId || testimony.authorId !== authorId) throw new Error("Unauthorized");
     if (Date.now() - testimony.createdAt >= 86_400_000) throw new Error("Edit window expired");
-    await ctx.db.patch(id, { ...fields, editedAt: Date.now() });
+    if (photoAction === "replace" && !photoStorageId) {
+      throw new Error("Missing photo for replace action");
+    }
+
+    const photoPatch =
+      photoAction === "replace"
+        ? { photoStorageId }
+        : photoAction === "remove"
+          ? { photoStorageId: undefined }
+          : {};
+
+    await ctx.db.patch(id, {
+      category,
+      originalText,
+      originalLanguage,
+      editedText,
+      translatedText,
+      subjectName,
+      subjectProfession,
+      subjectCountry,
+      authorProfession,
+      authorCountry,
+      ...photoPatch,
+      editedAt: Date.now(),
+    });
+  },
+});
+
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
   },
 });
 

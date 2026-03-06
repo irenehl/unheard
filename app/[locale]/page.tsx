@@ -77,6 +77,23 @@ export default async function FeedPage({
     },
   });
 
+  // #region agent log
+  await fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "269760" },
+    body: JSON.stringify({
+      sessionId: "269760",
+      runId: "run2",
+      hypothesisId: "H5",
+      location: "app/[locale]/page.tsx:FeedPage",
+      message: "Server page executed with fullscreen PhotoGrid wrapper",
+      data: { hasPhotoGridWrapper: true },
+      timestamp: Date.now(),
+    }),
+    cache: "no-store",
+  }).catch(() => {});
+  // #endregion
+
   return (
     <>
       <section
@@ -123,7 +140,7 @@ export default async function FeedPage({
       </section>
 
       {/* Photo grid — visual archive */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 border-b border-border">
+      <div className="w-screen border-b border-border">
         <PhotoGrid />
       </div>
 

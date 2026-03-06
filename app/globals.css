@@ -71,6 +71,9 @@
   --input: hsl(0, 0%, 25%);
   --ring: hsl(120, 13%, 45%);
 
+  /* Warm honor accent — used only for tribute labels */
+  --honor: hsl(35, 40%, 52%);
+
   --sidebar: hsl(0, 0%, 10%);
   --sidebar-foreground: hsl(43, 30%, 94%);
   --sidebar-primary: hsl(120, 13%, 45%);
@@ -111,6 +114,9 @@
   --border: hsl(0, 0%, 10%);
   --input: hsl(0, 0%, 10%);
   --ring: hsl(120, 13%, 45%);
+
+  /* Warm honor accent — used only for tribute labels */
+  --honor: hsl(35, 40%, 52%);
   
   --sidebar: hsl(43, 30%, 94%);
   --sidebar-foreground: hsl(0, 0%, 10%);
@@ -271,18 +277,6 @@ html[data-reduce-motion="true"] body::after {
   color: var(--foreground);
 }
 
-/* ── Ken Burns — photo grid ─────────────────────────────────── */
-@keyframes kenBurns {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.08); }
-  100% { transform: scale(1); }
-}
-
-.ken-burns {
-  animation: kenBurns 16s ease-in-out infinite;
-  animation-delay: var(--ken-delay, 0s);
-  will-change: transform;
-}
 
 /* ── Hide scrollbar but keep scroll ─────────────────────────── */
 .scrollbar-hide {
