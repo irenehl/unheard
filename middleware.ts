@@ -1,6 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import createMiddleware from "next-intl/middleware";
-import { NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
 
 const intlMiddleware = createMiddleware(routing);
@@ -8,17 +7,17 @@ const intlMiddleware = createMiddleware(routing);
 const isAdminRoute = createRouteMatcher(["/:locale/admin(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
-  // Skip locale routing for API routes
+  // Keep Clerk middleware active for API routes, but skip next-intl handling.
   if (req.nextUrl.pathname.startsWith("/api/")) {
-    return NextResponse.next();
+    return;
   }
 
-  // Keep Clerk handling active, but avoid next-intl rewriting OAuth callback path.
+  // Keep Clerk middleware active, but avoid next-intl rewriting OAuth callback path.
   if (
     req.nextUrl.pathname === "/sso-callback" ||
     req.nextUrl.pathname.startsWith("/sso-callback/")
   ) {
-    return NextResponse.next();
+    return;
   }
 
   if (isAdminRoute(req)) {
@@ -27,7 +26,7 @@ export default clerkMiddleware(async (auth, req) => {
       ?.role;
     if (role !== "admin") {
       const url = new URL(`/`, req.url);
-      return NextResponse.redirect(url);
+      return Response.redirect(url);
     }
   }
 
