@@ -119,6 +119,40 @@ export function FeedClient({
   const [showSlowConnection, setShowSlowConnection] = React.useState(false);
 
   React.useEffect(() => {
+    // #region agent log
+    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+      body: JSON.stringify({
+        sessionId: "e5cbed",
+        runId: "pre-fix-6",
+        hypothesisId: "H21",
+        location: "components/FeedClient.tsx:useEffect:hydration-snapshot",
+        message: "FeedClient hydrated with initial and current lengths",
+        data: {
+          locale,
+          initialLen: initialPage.page.length,
+          itemsLen: items.length,
+          filterKey,
+          initialFilterKey,
+          typeParam: typeParam ?? null,
+          categoryParam: categoryParam ?? null,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [
+    locale,
+    initialPage.page.length,
+    items.length,
+    filterKey,
+    initialFilterKey,
+    typeParam,
+    categoryParam,
+  ]);
+
+  React.useEffect(() => {
     setItems(initialPage.page);
     setCursor(initialPage.isDone ? null : initialPage.continueCursor);
     setIsLoadingMore(false);
