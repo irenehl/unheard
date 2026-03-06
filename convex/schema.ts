@@ -51,7 +51,7 @@ export default defineSchema({
     name: v.string(),
     profession: v.string(),
     country: v.string(),
-    submittedBy: v.string(),
+    submittedBy: v.optional(v.string()),
     status: v.union(v.literal("published"), v.literal("removed")),
     createdAt: v.number(),
   })

@@ -14,7 +14,7 @@ export const create = mutation({
     name: v.string(),
     profession: v.string(),
     country: v.string(),
-    submittedBy: v.string(),
+    submittedBy: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     return ctx.db.insert("profiles", {

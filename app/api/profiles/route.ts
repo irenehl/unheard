@@ -11,7 +11,6 @@ const convex = new ConvexHttpClient(getNormalizedConvexUrl());
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth();
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
@@ -50,7 +49,7 @@ export async function POST(req: NextRequest) {
       name,
       profession,
       country,
-      submittedBy: userId,
+      submittedBy: userId ?? undefined,
     });
 
     return NextResponse.json({ id }, { status: 201 });

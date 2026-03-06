@@ -32,7 +32,6 @@ function parseOptionalField(value: FormDataEntryValue | null) {
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth();
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const formData = await req.formData();
     const type = formData.get("type");
@@ -92,7 +91,7 @@ export async function POST(req: NextRequest) {
     const id = await convex.mutation(api.testimonies.create, {
       type: type as ValidType,
       category: category as ValidCategory,
-      authorId: userId,
+      authorId: userId ?? undefined,
       authorName,
       isAnonymous,
       originalText: text.trim(),

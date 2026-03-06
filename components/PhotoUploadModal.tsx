@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import { useUser, useSignIn } from "@clerk/nextjs";
 import { X, Upload } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
@@ -33,9 +32,6 @@ const shakeVariants = {
 
 export function PhotoUploadModal({ onClose }: { onClose: () => void }) {
   const t = useTranslations("gallery");
-  const tAuth = useTranslations("auth");
-  const { isSignedIn } = useUser();
-  const { signIn } = useSignIn();
   const shouldReduceMotion = useShouldReduceMotion();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -171,28 +167,7 @@ export function PhotoUploadModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="p-6">
-            {/* Not signed in */}
-            {!isSignedIn ? (
-              <div className="space-y-4 py-4 text-center">
-                <p className="text-sm text-muted-foreground">{t("signInRequired")}</p>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    onClick={() => signIn?.authenticateWithRedirect({ strategy: "oauth_google", redirectUrl: "/sso-callback", redirectUrlComplete: window.location.pathname })}
-                    variant="outline"
-                    className="w-full rounded-none border-foreground text-xs font-bold tracking-widest uppercase h-12"
-                  >
-                    {tAuth("signInWithGoogle")}
-                  </Button>
-                  <Button
-                    onClick={() => signIn?.authenticateWithRedirect({ strategy: "oauth_x", redirectUrl: "/sso-callback", redirectUrlComplete: window.location.pathname })}
-                    variant="outline"
-                    className="w-full rounded-none border-foreground text-xs font-bold tracking-widest uppercase h-12"
-                  >
-                    {tAuth("signInWithX")}
-                  </Button>
-                </div>
-              </div>
-            ) : status === "success" ? (
+            {status === "success" ? (
               /* Success */
               <motion.div
                 className="py-12 text-center space-y-3"

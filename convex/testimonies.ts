@@ -235,7 +235,7 @@ export const create = mutation({
   args: {
     type: v.union(v.literal("honor"), v.literal("tell")),
     category: CATEGORY_VALUES,
-    authorId: v.string(),
+    authorId: v.optional(v.string()),
     authorName: v.optional(v.string()),
     isAnonymous: v.boolean(),
     originalText: v.string(),
