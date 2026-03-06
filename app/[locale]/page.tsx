@@ -13,7 +13,61 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale });
+  // #region agent log
+  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+    body: JSON.stringify({
+      sessionId: "e5cbed",
+      runId: "pre-fix-1",
+      hypothesisId: "H1",
+      location: "app/[locale]/page.tsx:generateMetadata:start",
+      message: "FeedPage metadata generation started",
+      data: { locale },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
+  let t: Awaited<ReturnType<typeof getTranslations>>;
+  try {
+    t = await getTranslations({ locale });
+  } catch (error) {
+    // #region agent log
+    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+      body: JSON.stringify({
+        sessionId: "e5cbed",
+        runId: "pre-fix-1",
+        hypothesisId: "H1",
+        location: "app/[locale]/page.tsx:generateMetadata:error",
+        message: "FeedPage metadata getTranslations failed",
+        data: {
+          locale,
+          errorMessage: error instanceof Error ? error.message : "unknown",
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    throw error;
+  }
+  // #region agent log
+  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+    body: JSON.stringify({
+      sessionId: "e5cbed",
+      runId: "pre-fix-2",
+      hypothesisId: "H1",
+      location: "app/[locale]/page.tsx:generateMetadata:success",
+      message: "FeedPage metadata translations loaded",
+      data: { locale },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
 
   return {
     title: t("feed.title"),
@@ -48,11 +102,54 @@ export default async function FeedPage({
 }: {
   searchParams: Promise<{ type?: string; category?: string }>;
 }) {
-  const [t, locale, params] = await Promise.all([
-    getTranslations(),
-    getLocale(),
-    searchParams,
-  ]);
+  let t: Awaited<ReturnType<typeof getTranslations>>;
+  let locale: Awaited<ReturnType<typeof getLocale>>;
+  let params: Awaited<typeof searchParams>;
+  try {
+    [t, locale, params] = await Promise.all([
+      getTranslations(),
+      getLocale(),
+      searchParams,
+    ]);
+  } catch (error) {
+    // #region agent log
+    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+      body: JSON.stringify({
+        sessionId: "e5cbed",
+        runId: "pre-fix-1",
+        hypothesisId: "H2",
+        location: "app/[locale]/page.tsx:FeedPage:setup-error",
+        message: "FeedPage setup failed before data fetch",
+        data: {
+          errorMessage: error instanceof Error ? error.message : "unknown",
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    throw error;
+  }
+  // #region agent log
+  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+    body: JSON.stringify({
+      sessionId: "e5cbed",
+      runId: "pre-fix-1",
+      hypothesisId: "H2",
+      location: "app/[locale]/page.tsx:FeedPage:setup-success",
+      message: "FeedPage setup completed",
+      data: {
+        locale,
+        type: params.type ?? null,
+        category: params.category ?? null,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   const type =
     params.type === "honor" || params.type === "tell" ? params.type : undefined;
   const categoryValues: Category[] = [
@@ -67,15 +164,77 @@ export default async function FeedPage({
   const category = categoryValues.includes(params.category as Category)
     ? (params.category as Category)
     : undefined;
-  const initialPage = await fetchQuery(api.testimonies.listFeed, {
-    type,
-    category,
-    locale,
-    paginationOpts: {
-      numItems: 20,
-      cursor: null,
-    },
-  });
+  // #region agent log
+  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+    body: JSON.stringify({
+      sessionId: "e5cbed",
+      runId: "pre-fix-1",
+      hypothesisId: "H4",
+      location: "app/[locale]/page.tsx:FeedPage:before-fetchQuery",
+      message: "FeedPage calling testimonies.listFeed",
+      data: {
+        locale,
+        type: type ?? null,
+        category: category ?? null,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+  let initialPage;
+  try {
+    initialPage = await fetchQuery(api.testimonies.listFeed, {
+      type,
+      category,
+      locale,
+      paginationOpts: {
+        numItems: 20,
+        cursor: null,
+      },
+    });
+  } catch (error) {
+    // #region agent log
+    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+      body: JSON.stringify({
+        sessionId: "e5cbed",
+        runId: "pre-fix-1",
+        hypothesisId: "H4",
+        location: "app/[locale]/page.tsx:FeedPage:fetchQuery-error",
+        message: "FeedPage fetchQuery failed",
+        data: {
+          locale,
+          type: type ?? null,
+          category: category ?? null,
+          errorMessage: error instanceof Error ? error.message : "unknown",
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    throw error;
+  }
+  // #region agent log
+  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+    body: JSON.stringify({
+      sessionId: "e5cbed",
+      runId: "pre-fix-1",
+      hypothesisId: "H4",
+      location: "app/[locale]/page.tsx:FeedPage:fetchQuery-success",
+      message: "FeedPage fetchQuery completed",
+      data: {
+        itemCount: initialPage.page.length,
+        isDone: initialPage.isDone,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
 
   return (
     <>

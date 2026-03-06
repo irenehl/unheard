@@ -7,12 +7,107 @@ import { ThemeToggle } from "./ThemeToggle";
 import { ReadingPrefsGlobal } from "./ReadingPrefsGlobal";
 
 export async function NavBar({ locale }: { locale: string }) {
-  const { sessionClaims } = await auth();
+  // #region agent log
+  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+    body: JSON.stringify({
+      sessionId: "e5cbed",
+      runId: "pre-fix-2",
+      hypothesisId: "H6",
+      location: "components/NavBar.tsx:NavBar:before-auth",
+      message: "NavBar calling Clerk auth",
+      data: { locale },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+  let sessionClaims: Awaited<ReturnType<typeof auth>>["sessionClaims"];
+  try {
+    ({ sessionClaims } = await auth());
+  } catch (error) {
+    // #region agent log
+    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+      body: JSON.stringify({
+        sessionId: "e5cbed",
+        runId: "pre-fix-2",
+        hypothesisId: "H6",
+        location: "components/NavBar.tsx:NavBar:auth-error",
+        message: "NavBar Clerk auth failed",
+        data: {
+          locale,
+          errorMessage: error instanceof Error ? error.message : "unknown",
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    throw error;
+  }
+  // #region agent log
+  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+    body: JSON.stringify({
+      sessionId: "e5cbed",
+      runId: "pre-fix-2",
+      hypothesisId: "H6",
+      location: "components/NavBar.tsx:NavBar:auth-success",
+      message: "NavBar Clerk auth succeeded",
+      data: {
+        locale,
+        hasSessionClaims: Boolean(sessionClaims),
+        hasUser: Boolean(sessionClaims?.sub),
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   const isAdmin =
     (sessionClaims?.metadata as { role?: string } | undefined)?.role ===
     "admin";
   const isSignedIn = Boolean(sessionClaims?.sub);
-  const t = await getTranslations("nav");
+  let t: Awaited<ReturnType<typeof getTranslations>>;
+  try {
+    t = await getTranslations("nav");
+  } catch (error) {
+    // #region agent log
+    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+      body: JSON.stringify({
+        sessionId: "e5cbed",
+        runId: "pre-fix-2",
+        hypothesisId: "H6",
+        location: "components/NavBar.tsx:NavBar:getTranslations-error",
+        message: "NavBar translations failed",
+        data: {
+          locale,
+          errorMessage: error instanceof Error ? error.message : "unknown",
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    throw error;
+  }
+  // #region agent log
+  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+    body: JSON.stringify({
+      sessionId: "e5cbed",
+      runId: "pre-fix-2",
+      hypothesisId: "H6",
+      location: "components/NavBar.tsx:NavBar:getTranslations-success",
+      message: "NavBar translations loaded",
+      data: { locale },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
 
   return (
     <header className="bg-background pt-8 pb-4 relative z-10">

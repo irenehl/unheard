@@ -111,7 +111,66 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  const messages = await getMessages();
+  // #region agent log
+  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+    body: JSON.stringify({
+      sessionId: "e5cbed",
+      runId: "pre-fix-1",
+      hypothesisId: "H3",
+      location: "app/[locale]/layout.tsx:LocaleLayout:before-getMessages",
+      message: "LocaleLayout requesting messages",
+      data: { locale },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+  let messages: Awaited<ReturnType<typeof getMessages>>;
+  try {
+    messages = await getMessages();
+  } catch (error) {
+    // #region agent log
+    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+      body: JSON.stringify({
+        sessionId: "e5cbed",
+        runId: "pre-fix-1",
+        hypothesisId: "H3",
+        location: "app/[locale]/layout.tsx:LocaleLayout:getMessages-error",
+        message: "LocaleLayout getMessages failed",
+        data: {
+          locale,
+          errorMessage: error instanceof Error ? error.message : "unknown",
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    throw error;
+  }
+  // #region agent log
+  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
+    body: JSON.stringify({
+      sessionId: "e5cbed",
+      runId: "pre-fix-1",
+      hypothesisId: "H3",
+      location: "app/[locale]/layout.tsx:LocaleLayout:getMessages-success",
+      message: "LocaleLayout loaded messages",
+      data: {
+        locale,
+        messageNamespaceCount:
+          messages && typeof messages === "object"
+            ? Object.keys(messages).length
+            : 0,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
 
   return (
     <ClerkProvider>
