@@ -1,11 +1,12 @@
 import { getTranslations } from "next-intl/server";
-import { NextIntlClientProvider } from "next-intl";
+import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { ClerkProvider } from "@clerk/nextjs";
 import { routing } from "@/i18n/routing";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import { NavBar } from "@/components/NavBar";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 export async function generateMetadata({
   params,
@@ -51,24 +52,12 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const messages = await getMessages();
 
-  // #region agent log
-  await fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "269760" },
-    body: JSON.stringify({
-      sessionId: "269760",
-      runId: "run3",
-      hypothesisId: "H8",
-      location: "app/[locale]/layout.tsx:LocaleLayout",
-      message: "Locale layout executed",
-      data: { locale },
-      timestamp: Date.now(),
-    }),
-    cache: "no-store",
-  }).catch(() => {});
-  // #endregion
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
+
+  const messages = await getMessages();
 
   return (
     <ClerkProvider>
