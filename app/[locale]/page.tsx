@@ -7,6 +7,7 @@ import { FeedClient } from "@/components/FeedClient";
 import { PhotoGrid } from "@/components/PhotoGrid";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import type { Metadata } from "next";
 
 // #region agent log
@@ -115,6 +116,32 @@ type Category =
   | "education"
   | "courage";
 
+type FeedItem = {
+  _id: Id<"testimonies">;
+  type: "honor" | "tell";
+  category: Category;
+  authorId?: string;
+  authorName?: string;
+  isAnonymous: boolean;
+  createdAt: number;
+  editedAt?: number;
+  originalLanguage: string;
+  originalText: string;
+  editedText: string;
+  translatedText: Record<string, string>;
+  hasMoreContent?: boolean;
+  hasMoreOriginal?: boolean;
+  hasMoreEdited?: boolean;
+  hasMoreTranslated?: boolean;
+  photoUrl?: string | null;
+};
+
+type FeedPage = {
+  page: FeedItem[];
+  isDone: boolean;
+  continueCursor: string | null;
+};
+
 export default async function FeedPage({
   searchParams,
 }: {
@@ -123,36 +150,50 @@ export default async function FeedPage({
     category?: string;
     debugSegments?: string;
     debugPlainCards?: string;
+    debugMinimal?: string;
   }>;
 }) {
-  let t: Awaited<ReturnType<typeof getTranslations>>;
-  let locale: Awaited<ReturnType<typeof getLocale>>;
-  let params: Awaited<typeof searchParams>;
+  const params = await searchParams;
+  const debugMinimal =
+    params.debugMinimal === "1" || params.debugMinimal === "true";
+
+  let t: Awaited<ReturnType<typeof getTranslations>> | null = null;
+  let locale: Awaited<ReturnType<typeof getLocale>> = "en";
+  let setupErrorMessage: string | null = null;
   try {
-    [t, locale, params] = await Promise.all([
+    [t, locale] = await Promise.all([
       getTranslations(),
       getLocale(),
-      searchParams,
     ]);
   } catch (error) {
-    // #region agent log
-    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-      body: JSON.stringify({
-        sessionId: "e5cbed",
-        runId: "pre-fix-1",
-        hypothesisId: "H2",
-        location: "app/[locale]/page.tsx:FeedPage:setup-error",
-        message: "FeedPage setup failed before data fetch",
-        data: {
-          errorMessage: error instanceof Error ? error.message : "unknown",
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-    throw error;
+    setupErrorMessage = error instanceof Error ? error.message : "unknown";
+  }
+
+  if (setupErrorMessage) {
+    return (
+      <>
+        <DebugPing
+          marker="feed-page-setup-error-fallback"
+          data={{
+            setupError: setupErrorMessage.slice(0, 140),
+            debugMinimal,
+          }}
+        />
+        <section className="mx-auto max-w-5xl px-6 py-14">
+          <h1 className="text-xl font-semibold text-foreground">Feed setup failed</h1>
+        </section>
+      </>
+    );
+  }
+  if (!t) {
+    return (
+      <>
+        <DebugPing
+          marker="feed-page-setup-null-translations"
+          data={{ debugMinimal }}
+        />
+      </>
+    );
   }
   // #region agent log
   fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
@@ -198,6 +239,19 @@ export default async function FeedPage({
   const showFeed = !isolateMode || segmentSet.has("feed");
   const plainCards =
     params.debugPlainCards === "1" || params.debugPlainCards === "true";
+  if (debugMinimal) {
+    return (
+      <>
+        <DebugPing
+          marker="feed-page-debug-minimal"
+          data={{ locale, isolateMode, showPhotoGrid, showFilter, showFeed }}
+        />
+        <section className="mx-auto max-w-5xl px-6 py-14">
+          <h1 className="text-xl font-semibold text-foreground">Debug minimal page</h1>
+        </section>
+      </>
+    );
+  }
   // #region agent log
   fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
     method: "POST",
@@ -217,7 +271,8 @@ export default async function FeedPage({
     }),
   }).catch(() => {});
   // #endregion
-  let initialPage;
+  let initialPage: FeedPage;
+  let fetchErrorMessage: string | null = null;
   try {
     initialPage = await fetchQuery(api.testimonies.listFeed, {
       type,
@@ -249,7 +304,12 @@ export default async function FeedPage({
       }),
     }).catch(() => {});
     // #endregion
-    throw error;
+    fetchErrorMessage = error instanceof Error ? error.message : "unknown";
+    initialPage = {
+      page: [],
+      isDone: true,
+      continueCursor: null,
+    };
   }
   // #region agent log
   fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
@@ -269,6 +329,26 @@ export default async function FeedPage({
     }),
   }).catch(() => {});
   // #endregion
+  if (fetchErrorMessage) {
+    return (
+      <>
+        <DebugPing
+          marker="feed-page-fetch-error-fallback"
+          data={{
+            locale,
+            fetchError: fetchErrorMessage.slice(0, 140),
+            isolateMode,
+            showPhotoGrid,
+            showFilter,
+            showFeed,
+          }}
+        />
+        <section className="mx-auto max-w-5xl px-6 py-14">
+          <h1 className="text-xl font-semibold text-foreground">Feed data fallback</h1>
+        </section>
+      </>
+    );
+  }
 
   return (
     <>
