@@ -14,7 +14,46 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale });
+  // #region agent log
+  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "75acde" },
+    body: JSON.stringify({
+      sessionId: "75acde",
+      runId: "pre-fix-2",
+      hypothesisId: "H6",
+      location: "app/[locale]/layout.tsx:generateMetadata:start",
+      message: "generateMetadata started",
+      data: { locale, isValidLocale: hasLocale(routing.locales, locale) },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
+  let t: Awaited<ReturnType<typeof getTranslations>>;
+  try {
+    t = await getTranslations({ locale });
+  } catch (error) {
+    // #region agent log
+    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "75acde" },
+      body: JSON.stringify({
+        sessionId: "75acde",
+        runId: "pre-fix-2",
+        hypothesisId: "H7",
+        location: "app/[locale]/layout.tsx:generateMetadata:error",
+        message: "generateMetadata getTranslations failed",
+        data: {
+          locale,
+          errorMessage: error instanceof Error ? error.message : "unknown",
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    throw error;
+  }
 
   const siteUrl = process.env.SITE_URL || "https://example.com";
 
@@ -54,6 +93,21 @@ export default async function LocaleLayout({
   const { locale } = await params;
 
   if (!hasLocale(routing.locales, locale)) {
+    // #region agent log
+    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "75acde" },
+      body: JSON.stringify({
+        sessionId: "75acde",
+        runId: "pre-fix-2",
+        hypothesisId: "H8",
+        location: "app/[locale]/layout.tsx:layout-invalid-locale",
+        message: "LocaleLayout rejected invalid locale",
+        data: { locale },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     notFound();
   }
 
