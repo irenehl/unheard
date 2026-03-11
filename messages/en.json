@@ -149,10 +149,12 @@
   },
   "share": {
     "button": "Share",
+    "native": "Share now",
     "x": "Share on X",
     "linkedin": "Share on LinkedIn",
     "copyLink": "Copy link",
     "copied": "Copied!",
+    "previewLabel": "Link preview",
     "tweetTemplate": "«{excerpt}» — on Ellas {url}"
   },
   "story": {

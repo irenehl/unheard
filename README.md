@@ -36,6 +36,11 @@ Optional:
 
 - `NEXT_PUBLIC_CLARITY_PROJECT_ID`: enables Microsoft Clarity analytics script.
 
+Important for social link previews:
+
+- In production, set both `SITE_URL` and `NEXT_PUBLIC_SITE_URL` to your deployed HTTPS domain.
+- If these values point to `localhost`, X/LinkedIn/other platforms will not be able to fetch preview cards.
+
 ## Run locally
 
 ```bash

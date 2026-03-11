@@ -1,6 +1,8 @@
 import { getTranslations, getLocale } from "next-intl/server";
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { SubmitForm } from "@/components/SubmitForm";
+import { SignInPrompt } from "@/components/SignInPrompt";
 import { buildLocaleAlternates, buildPath, getSiteUrl } from "@/lib/seo";
 import type { Metadata } from "next";
 
@@ -19,8 +21,8 @@ export async function generateMetadata({
 
   const siteUrl = getSiteUrl();
   const pagePath = buildPath(locale, "/submit");
-  const defaultOgImage = `${siteUrl}/opengraph-image`;
-  const defaultTwitterImage = `${siteUrl}/twitter-image`;
+  const defaultOgImage = `${siteUrl}/unheard.png`;
+  const defaultTwitterImage = `${siteUrl}/unheard.png`;
 
   return {
     title: submitMessages.title,
@@ -48,10 +50,11 @@ export async function generateMetadata({
 }
 
 export default async function SubmitPage() {
-  const [t, tNav, locale] = await Promise.all([
+  const [t, tNav, locale, { userId }] = await Promise.all([
     getTranslations("submit"),
     getTranslations("nav"),
     getLocale(),
+    auth(),
   ]);
 
   return (
@@ -81,7 +84,11 @@ export default async function SubmitPage() {
         </h1>
       </header>
 
-      <SubmitForm />
+      {userId ? (
+        <SubmitForm />
+      ) : (
+        <SignInPrompt returnUrl={`/${locale}/submit`} />
+      )}
     </div>
   );
 }

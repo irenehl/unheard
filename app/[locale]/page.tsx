@@ -2,8 +2,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
 import { Suspense } from "react";
 import { CategoryFilter } from "@/components/CategoryFilter";
-import { FeedClient } from "@/components/FeedClient";
-import { PhotoGrid } from "@/components/PhotoGrid";
+import dynamic from "next/dynamic";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -17,16 +16,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
 
-  let t: Awaited<ReturnType<typeof getTranslations>>;
-  try {
-    t = await getTranslations({ locale });
-  } catch (error) {
-    throw error;
-  }
+  const t = await getTranslations({ locale });
   const siteUrl = getSiteUrl();
   const pagePath = buildPath(locale);
   const defaultOgImage = `${siteUrl}/opengraph-image`;
-  const defaultTwitterImage = `${siteUrl}/twitter-image`;
+  const defaultTwitterImage = `${siteUrl}/opengraph-image`;
 
   return {
     title: t("feed.title"),
@@ -88,6 +82,20 @@ type FeedPage = {
   continueCursor: string | null;
 };
 
+const PhotoGrid = dynamic(
+  () => import("@/components/PhotoGrid").then((mod) => mod.PhotoGrid),
+  {
+    loading: () => <PhotoGridSkeleton />,
+  }
+);
+
+const FeedClient = dynamic(
+  () => import("@/components/FeedClient").then((mod) => mod.FeedClient),
+  {
+    loading: () => <FeedSkeleton />,
+  }
+);
+
 export default async function FeedPage({
   searchParams,
 }: {
@@ -103,28 +111,10 @@ export default async function FeedPage({
   const debugMinimal =
     params.debugMinimal === "1" || params.debugMinimal === "true";
 
-  let t: Awaited<ReturnType<typeof getTranslations>> | null = null;
-  let locale: Awaited<ReturnType<typeof getLocale>> = "en";
-  let setupErrorMessage: string | null = null;
-  try {
-    [t, locale] = await Promise.all([
-      getTranslations(),
-      getLocale(),
-    ]);
-  } catch (error) {
-    setupErrorMessage = error instanceof Error ? error.message : "unknown";
-  }
-
-  if (setupErrorMessage) {
-    return (
-      <section className="mx-auto max-w-5xl px-6 py-14">
-        <h1 className="text-xl font-semibold text-foreground">Feed setup failed</h1>
-      </section>
-    );
-  }
-  if (!t) {
-    return null;
-  }
+  const [t, locale] = await Promise.all([
+    getTranslations(),
+    getLocale(),
+  ]);
   const type =
     params.type === "honor" || params.type === "tell" ? params.type : undefined;
   const categoryValues: Category[] = [
@@ -157,39 +147,12 @@ export default async function FeedPage({
       </section>
     );
   }
-  let initialPage: FeedPage;
-  let fetchErrorMessage: string | null = null;
-  try {
-    initialPage = await fetchQuery(api.testimonies.listFeed, {
-      type,
-      category,
-      locale,
-      paginationOpts: {
-        numItems: 20,
-        cursor: null,
-      },
-    });
-  } catch (error) {
-    fetchErrorMessage = error instanceof Error ? error.message : "unknown";
-    initialPage = {
-      page: [],
-      isDone: true,
-      continueCursor: null,
-    };
-  }
-  if (fetchErrorMessage) {
-    return (
-      <section className="mx-auto max-w-5xl px-6 py-14">
-        <h1 className="text-xl font-semibold text-foreground">Feed data fallback</h1>
-      </section>
-    );
-  }
 
   return (
     <>
       <section
         aria-labelledby="hero-title"
-        className="relative flex min-h-[68vh] flex-col justify-between border-b border-border px-6 py-8 sm:px-10 lg:px-16 overflow-hidden"
+        className="relative flex min-h-dvh flex-col justify-between overflow-hidden border-b border-border px-6 py-8 sm:px-10 lg:px-16"
       >
         <div className="anim-0 flex items-center justify-between">
           <span className="font-mono text-[0.6rem] tracking-[0.3em] text-muted-foreground uppercase">
@@ -231,8 +194,10 @@ export default async function FeedPage({
       </section>
 
       {showPhotoGrid && (
-        <div className="w-screen border-b border-border">
-          <PhotoGrid />
+        <div className="w-full border-b border-border">
+          <Suspense fallback={<PhotoGridSkeleton />}>
+            <PhotoGrid />
+          </Suspense>
         </div>
       )}
 
@@ -250,19 +215,86 @@ export default async function FeedPage({
           aria-label={t("feed.title")}
           className="mx-auto max-w-7xl px-4 sm:px-6 py-10"
         >
-          <Suspense fallback={null}>
-            <FeedClient
+          <Suspense fallback={<FeedSkeleton />}>
+            <FeedContent
               locale={locale}
-              initialPage={initialPage}
-              initialFilters={{
-                type: type ?? null,
-                category: category ?? null,
-              }}
+              type={type}
+              category={category}
               plainCards={plainCards}
             />
           </Suspense>
         </section>
       )}
     </>
+  );
+}
+
+async function FeedContent({
+  locale,
+  type,
+  category,
+  plainCards,
+}: {
+  locale: string;
+  type?: "honor" | "tell";
+  category?: Category;
+  plainCards: boolean;
+}) {
+  let initialPage: FeedPage;
+
+  try {
+    initialPage = await fetchQuery(api.testimonies.listFeed, {
+      type,
+      category,
+      locale,
+      paginationOpts: {
+        numItems: 20,
+        cursor: null,
+      },
+    });
+  } catch {
+    return (
+      <section className="mx-auto max-w-5xl px-6 py-14">
+        <h1 className="text-xl font-semibold text-foreground">Feed data fallback</h1>
+      </section>
+    );
+  }
+
+  return (
+    <FeedClient
+      locale={locale}
+      initialPage={initialPage}
+      initialFilters={{
+        type: type ?? null,
+        category: category ?? null,
+      }}
+      plainCards={plainCards}
+    />
+  );
+}
+
+function PhotoGridSkeleton() {
+  return (
+    <div className="h-dvh w-full animate-pulse bg-secondary/70" aria-hidden />
+  );
+}
+
+function FeedSkeleton() {
+  return (
+    <div className="border-t-[3px] border-b-[3px] border-foreground mt-8 mb-12">
+      <div className="columns-1 gap-x-px bg-border md:columns-2 lg:columns-3">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div
+            key={index}
+            className="mb-px h-56 w-full break-inside-avoid bg-background/90 p-8"
+          >
+            <div className="h-2 w-24 animate-pulse bg-secondary" />
+            <div className="mt-5 h-2 w-full animate-pulse bg-secondary" />
+            <div className="mt-3 h-2 w-[92%] animate-pulse bg-secondary" />
+            <div className="mt-3 h-2 w-[84%] animate-pulse bg-secondary" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

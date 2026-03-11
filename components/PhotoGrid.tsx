@@ -476,7 +476,7 @@ export function PhotoGrid() {
   // Loading / empty state
   if (rawProfiles === undefined || rawStoryPhotos === undefined) {
     return (
-      <section ref={rootRef} aria-label={t("sectionLabel")} className="w-screen h-screen" style={{ height: "100dvh" }}>
+      <section ref={rootRef} aria-label={t("sectionLabel")} className="h-dvh w-full">
         <div className="h-full bg-secondary animate-pulse" />
       </section>
     );
@@ -484,7 +484,7 @@ export function PhotoGrid() {
 
   if (photos.length === 0) {
     return (
-      <section ref={rootRef} aria-label={t("sectionLabel")} className="w-screen h-screen" style={{ height: "100dvh" }}>
+      <section ref={rootRef} aria-label={t("sectionLabel")} className="h-dvh w-full">
         <div className="border border-border border-dashed flex h-full flex-col items-center justify-center gap-4">
           <Camera className="h-8 w-8 text-muted-foreground" aria-hidden />
           <motion.button
@@ -501,7 +501,7 @@ export function PhotoGrid() {
   }
 
   return (
-    <section ref={rootRef} aria-label={t("sectionLabel")} className="w-screen h-screen" style={{ height: "100dvh" }}>
+    <section ref={rootRef} aria-label={t("sectionLabel")} className="h-dvh w-full">
       {/* Mobile carousel */}
       <div className="block md:hidden h-full">
         <MobileCarousel photos={photos} onUploadClick={() => setUploadOpen(true)} />

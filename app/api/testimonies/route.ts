@@ -53,7 +53,12 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(page, { status: 200 });
+    return NextResponse.json(page, {
+      status: 200,
+      headers: {
+        "Cache-Control": "public, s-maxage=20, stale-while-revalidate=40",
+      },
+    });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

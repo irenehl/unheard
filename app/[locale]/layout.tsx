@@ -6,6 +6,7 @@ import { routing } from "@/i18n/routing";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import { ClarityTracker } from "@/components/ClarityTracker";
 import { NavBar } from "@/components/NavBar";
+import { PageTransition } from "@/components/PageTransition";
 import { buildLocaleAlternates, buildPath, getSiteUrl } from "@/lib/seo";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -27,7 +28,7 @@ export async function generateMetadata({
   const siteUrl = getSiteUrl();
   const pagePath = buildPath(locale);
   const defaultOgImage = `${siteUrl}/opengraph-image`;
-  const defaultTwitterImage = `${siteUrl}/twitter-image`;
+  const defaultTwitterImage = `${siteUrl}/opengraph-image`;
 
   return {
     description: t("landing.tagline"),
@@ -79,8 +80,10 @@ export default async function LocaleLayout({
       <ConvexClientProvider>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ClarityTracker />
-          <NavBar locale={locale} />
-          {children}
+          <PageTransition>
+            <NavBar locale={locale} />
+            {children}
+          </PageTransition>
         </NextIntlClientProvider>
       </ConvexClientProvider>
     </ClerkProvider>

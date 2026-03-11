@@ -36,6 +36,9 @@ export async function POST(req: NextRequest) {
   try {
     const convex = getConvexClient();
     const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const formData = await req.formData();
     const type = formData.get("type");
@@ -114,7 +117,7 @@ export async function POST(req: NextRequest) {
     const id = await convex.mutation(api.testimonies.create, {
       type: type as ValidType,
       category: category as ValidCategory,
-      authorId: userId ?? undefined,
+      authorId: userId,
       authorName,
       isAnonymous,
       originalText,
@@ -136,12 +139,6 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Error in /api/submit:", error);
     const message = error instanceof Error ? error.message : "Internal server error";
-    const stack = error instanceof Error ? error.stack : undefined;
-    
-    // Log full error details for debugging
-    if (stack) {
-      console.error("Stack trace:", stack);
-    }
     
     if (message.includes("Missing NEXT_PUBLIC_CONVEX_URL")) {
       return NextResponse.json(
@@ -156,13 +153,8 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Return error message in development, generic message in production
-    const isDevelopment = process.env.NODE_ENV === "development";
     return NextResponse.json(
-      { 
-        error: isDevelopment ? message : "Internal server error",
-        ...(isDevelopment && stack ? { stack } : {})
-      },
+      { error: process.env.NODE_ENV === "development" ? message : "Internal server error" },
       { status: 500 }
     );
   }

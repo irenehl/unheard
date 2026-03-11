@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Flag, Check, Pencil, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/convex/_generated/api";
@@ -69,6 +70,7 @@ export function TestimonyCard({
   const [flagged, setFlagged] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [photoLoaded, setPhotoLoaded] = useState(false);
 
   const displayName = testimony.isAnonymous
     ? t("feed.anonymous")
@@ -91,9 +93,13 @@ export function TestimonyCard({
   const canEdit = isOwn && ageMs < 86_400_000;
   const hoursLeft = Math.floor((86_400_000 - ageMs) / 3_600_000);
 
-  const siteUrl =
-    SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
-  const storyUrl = `${siteUrl}/${locale}/story/${testimony._id}`;
+  const storyPath = `/${locale}/story/${testimony._id}`;
+  const runtimeOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  const siteUrl = runtimeOrigin || SITE_URL;
+  const storyUrl = siteUrl ? new URL(storyPath, siteUrl).toString() : storyPath;
+  const shareText =
+    testimony.translatedText[locale] || testimony.editedText || testimony.originalText;
+  const shareTitle = `${t("common.storyOf")} ${t(`categories.${testimony.category}`)}`;
 
   async function handleFlag() {
     if (flagged || isPlaceholder) return;
@@ -155,13 +161,18 @@ export function TestimonyCard({
 
         <div className="grow">
           {testimony.photoUrl && (
-            <div className="mb-6 overflow-hidden border border-border">
-              <img
+            <div className="relative mb-6 w-full max-h-[60vh] overflow-hidden border border-border lg:max-h-128">
+              {!photoLoaded && (
+                <div className="absolute inset-0 animate-pulse bg-secondary" aria-hidden />
+              )}
+              <Image
                 src={testimony.photoUrl}
                 alt={t("submit.photoPreviewAlt")}
-                className="block h-auto max-h-[60vh] lg:max-h-128 w-full grayscale hover:grayscale-0 transition-all duration-500"
-                loading="lazy"
-                decoding="async"
+                width={1200}
+                height={900}
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                className="block h-auto w-full grayscale transition-all duration-500 hover:grayscale-0"
+                onLoad={() => setPhotoLoaded(true)}
               />
             </div>
           )}
@@ -181,15 +192,15 @@ export function TestimonyCard({
         </div>
 
         <footer className="mt-6 flex items-center justify-between border-t border-border pt-3">
-          {/* Share — always visible */}
-          {/* {!isPlaceholder && (
+          {!isPlaceholder && (
             <SharePopover
               testimonyId={testimony._id}
-              originalText={testimony.originalText}
+              originalText={shareText}
               locale={locale}
               storyUrl={storyUrl}
+              storyTitle={shareTitle}
             />
-          )} */}
+          )}
 
           <div className="flex items-center gap-3 ml-auto">
             {/* Edit / Delete — own stories only */}

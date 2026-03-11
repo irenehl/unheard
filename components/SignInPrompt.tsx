@@ -7,7 +7,13 @@ import { useShouldReduceMotion } from "@/lib/motionPrefs";
 
 const EASE = [0.25, 0, 0, 1] as [number, number, number, number];
 
-export function SignInPrompt({ returnUrl }: { returnUrl: string }) {
+export function SignInPrompt({
+  returnUrl,
+  centered = false,
+}: {
+  returnUrl: string;
+  centered?: boolean;
+}) {
   const { signIn } = useSignIn();
   const t = useTranslations("auth");
   const shouldReduceMotion = useShouldReduceMotion();
@@ -37,7 +43,10 @@ export function SignInPrompt({ returnUrl }: { returnUrl: string }) {
       animate="visible"
       className="space-y-8"
     >
-      <motion.div variants={itemVariants} className="space-y-3">
+      <motion.div
+        variants={itemVariants}
+        className={`space-y-3 ${centered ? "text-center" : ""}`}
+      >
         <h2
           className="text-foreground leading-tight"
           style={{
@@ -49,12 +58,16 @@ export function SignInPrompt({ returnUrl }: { returnUrl: string }) {
         >
           {t("signInToPublish")}
         </h2>
-        <p className="text-muted-foreground text-sm leading-relaxed max-w-md">
+        <p
+          className={`text-muted-foreground text-sm leading-relaxed max-w-md ${
+            centered ? "mx-auto" : ""
+          }`}
+        >
           {t("signInPromptDesc")}
         </p>
       </motion.div>
 
-      <div className="flex flex-col gap-3 max-w-sm">
+      <div className={`flex flex-col gap-3 max-w-sm ${centered ? "mx-auto" : ""}`}>
         <motion.button
           variants={itemVariants}
           onClick={() => handleOAuth("oauth_google")}
@@ -80,7 +93,9 @@ export function SignInPrompt({ returnUrl }: { returnUrl: string }) {
 
       <motion.p
         variants={itemVariants}
-        className="text-[0.625rem] tracking-widest uppercase text-muted-foreground max-w-sm"
+        className={`text-[0.625rem] tracking-widest uppercase text-muted-foreground max-w-sm ${
+          centered ? "mx-auto text-center" : ""
+        }`}
       >
         {t("signInNote")}
       </motion.p>

@@ -1,10 +1,11 @@
-import { SignInButton, UserButton } from "@clerk/nextjs";
+import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { ReadingPrefsGlobal } from "./ReadingPrefsGlobal";
+import { SignInModal } from "./SignInModal";
 
 export async function NavBar({ locale }: { locale: string }) {
   let sessionClaims: Awaited<ReturnType<typeof auth>>["sessionClaims"];
@@ -25,7 +26,7 @@ export async function NavBar({ locale }: { locale: string }) {
   }
 
   return (
-    <header className="bg-background pt-8 pb-4 relative z-10">
+    <header id="navbar" className="bg-background pt-8 pb-4 relative z-10">
       <div className="mx-auto max-w-7xl px-4 flex flex-col items-center">
         <div className="w-full flex justify-between items-end mb-6 border-b border-border pb-6 relative anim-0">
           {/* Subtle masthead plate background */}
@@ -65,9 +66,9 @@ export async function NavBar({ locale }: { locale: string }) {
           </div>
         </div>
 
-        <div className="anim-2 w-full border-t-4 border-b border-foreground py-3 flex justify-between items-center">
+        <div className="anim-2 w-full border-t-4 border-b border-foreground py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <nav
-            className="flex items-center gap-6"
+            className="flex items-center gap-5 sm:gap-6"
             aria-label={t("mainNav")}
           >
             <Link
@@ -86,18 +87,14 @@ export async function NavBar({ locale }: { locale: string }) {
             )}
           </nav>
 
-          <div className="flex items-center gap-6">
+          <div className="ml-auto flex w-full flex-wrap items-center justify-end gap-4 sm:w-auto sm:gap-6">
             <ReadingPrefsGlobal />
             <ThemeToggle />
             <LocaleSwitcher />
             {isSignedIn ? (
               <UserButton />
             ) : (
-              <SignInButton mode="modal">
-                <button className="text-xs font-semibold tracking-widest uppercase text-foreground hover:text-primary transition-colors">
-                  {t("signIn")}
-                </button>
-              </SignInButton>
+              <SignInModal label={t("signIn")} />
             )}
           </div>
         </div>

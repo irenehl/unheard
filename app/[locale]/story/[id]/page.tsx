@@ -19,6 +19,19 @@ const getTestimony = cache(async (id: Id<"testimonies">) => {
   return await fetchQuery(api.testimonies.getById, { id });
 });
 
+function normalizeSnippet(text: string, maxLength: number) {
+  const compact = text.replace(/\s+/g, " ").trim();
+  if (compact.length <= maxLength) return compact;
+  return `${compact.slice(0, maxLength - 3).trimEnd()}...`;
+}
+
+function extractHeadline(text: string) {
+  const compact = text.replace(/\s+/g, " ").trim();
+  if (!compact) return "";
+  const firstSentence = compact.split(/(?<=[.!?])\s+/)[0] ?? compact;
+  return normalizeSnippet(firstSentence, 90);
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -40,32 +53,28 @@ export async function generateMetadata({
     };
   }
 
-  // Load translations for metadata
   const messages = (await import(`@/messages/${locale}.json`)).default;
   const t = (key: string) => {
     const keys = key.split(".");
-    let value: any = messages;
+    let value: unknown = messages;
     for (const k of keys) {
-      value = value?.[k];
+      value = (value as Record<string, unknown>)?.[k];
     }
-    return value || key;
+    return (value as string) || key;
   };
 
   const categoryLabel = t(`categories.${testimony.category}`);
-  const storyTitle = `${t("common.storyOf")} ${categoryLabel}`;
-  
-  // Create a safe description from the testimony text (first 160 chars)
   const textForDescription = testimony.translatedText[locale] || testimony.editedText || testimony.originalText;
-  const description = textForDescription.length > 160
-    ? textForDescription.substring(0, 157) + "..."
-    : textForDescription;
+  const headline = extractHeadline(textForDescription);
+  const storyTitle = headline || `${t("common.storyOf")} ${categoryLabel}`;
+  const description = normalizeSnippet(textForDescription, 160);
 
   const siteUrl = getSiteUrl();
   const pathSuffix = `/story/${id}`;
   const pagePath = buildPath(locale, pathSuffix);
   const url = `${siteUrl}${pagePath}`;
-  const openGraphImage = testimony.photoUrl || `${siteUrl}/opengraph-image`;
-  const twitterImage = testimony.photoUrl || `${siteUrl}/twitter-image`;
+  const generatedOgImage = `${siteUrl}${buildPath(locale, `/story/${id}/opengraph-image`)}`;
+  const fallbackOgImage = testimony.photoUrl || `${siteUrl}/unheard.png`;
 
   return {
     title: storyTitle,
@@ -82,13 +91,31 @@ export async function generateMetadata({
       locale: locale,
       type: "article",
       publishedTime: new Date(testimony.createdAt).toISOString(),
-      images: [{ url: openGraphImage }],
+      images: [
+        {
+          url: generatedOgImage,
+          width: 1200,
+          height: 630,
+          alt: storyTitle,
+        },
+        {
+          url: fallbackOgImage,
+          width: 1200,
+          height: 630,
+          alt: storyTitle,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: storyTitle,
       description: description,
-      images: [twitterImage],
+      images: [
+        {
+          url: generatedOgImage,
+          alt: storyTitle,
+        },
+      ],
     },
   };
 }
@@ -138,6 +165,8 @@ export default async function StoryPage({
   const authorName = testimony.isAnonymous
     ? t("feed.anonymous")
     : testimony.authorName ?? t("feed.anonymous");
+  const shareText =
+    testimony.translatedText[locale] || testimony.editedText || testimony.originalText;
 
   // JSON-LD structured data for Article
   const jsonLd = {
@@ -159,7 +188,7 @@ export default async function StoryPage({
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-dvh bg-background pb-20">
       <div className="border-t-[3px] border-foreground mt-8 mb-12 max-w-4xl mx-auto" />
 
       <script
@@ -175,12 +204,13 @@ export default async function StoryPage({
           >
             {t("common.backToFront")}
           </Link>
-          {/* <SharePopover
+          <SharePopover
             testimonyId={testimony._id}
-            originalText={testimony.originalText}
+            originalText={shareText}
             locale={locale}
             storyUrl={url}
-          /> */}
+            storyTitle={storyTitle}
+          />
         </div>
 
         <header className="mb-12 border-b border-border pb-8">
@@ -239,8 +269,8 @@ export default async function StoryPage({
             <Image
               src={testimony.photoUrl}
               alt={t("submit.photoPreviewAlt")}
-              width={0}
-              height={0}
+              width={1200}
+              height={900}
               sizes="(max-width: 768px) 100vw, 896px"
               className="w-full h-auto max-h-[75vh] object-contain grayscale"
               priority

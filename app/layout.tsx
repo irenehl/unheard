@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Ellas",
     description: "Stories of women the world never documented. Here, they have a name, a date, and witnesses.",
-    images: [`${siteUrl}/twitter-image`],
+    images: [`${siteUrl}/opengraph-image`],
   },
   robots: {
     index: true,
@@ -147,6 +147,116 @@ export default async function RootLayout({
                     root.dataset.reduceTexture = 'true';
                   }
                 } catch (e) {}
+              })();
+            `,
+          }}
+        />
+        <Script
+          id="navbar-height-init"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                function updateNavbarHeight() {
+                  try {
+                    const navbar = document.getElementById('navbar');
+                    if (navbar) {
+                      void navbar.offsetHeight;
+                      const height = navbar.offsetHeight;
+                      if (height > 0) {
+                        document.documentElement.style.setProperty('--navbar-height', height + 'px');
+                        const testElements = document.querySelectorAll('.min-h-dvh, .h-screen, .min-h-screen, .h-dvh');
+                        if (testElements.length > 0) {
+                          const viewportHeight = window.innerHeight;
+                          const expectedHeight = viewportHeight - height;
+                          const dvhCalc = 'calc(100dvh - ' + height + 'px)';
+                          const vhCalc = 'calc(100vh - ' + height + 'px)';
+                          testElements.forEach(function(el) {
+                            const htmlEl = el;
+                            if (htmlEl.classList.contains('min-h-dvh')) {
+                              const computedMinHeight = parseFloat(getComputedStyle(htmlEl).minHeight || '0');
+                              if (Math.abs(computedMinHeight - expectedHeight) >= 2 || computedMinHeight === viewportHeight) {
+                                htmlEl.style.minHeight = dvhCalc;
+                              }
+                            }
+                            if (htmlEl.classList.contains('min-h-screen')) {
+                              const computedMinHeight = parseFloat(getComputedStyle(htmlEl).minHeight || '0');
+                              if (Math.abs(computedMinHeight - expectedHeight) >= 2 || computedMinHeight === viewportHeight) {
+                                htmlEl.style.minHeight = vhCalc;
+                              }
+                            }
+                            if (htmlEl.classList.contains('h-dvh')) {
+                              const computedHeight = parseFloat(getComputedStyle(htmlEl).height || '0');
+                              if (Math.abs(computedHeight - expectedHeight) >= 2 || computedHeight === viewportHeight) {
+                                htmlEl.style.height = dvhCalc;
+                              }
+                            }
+                            if (htmlEl.classList.contains('h-screen')) {
+                              const computedHeight = parseFloat(getComputedStyle(htmlEl).height || '0');
+                              if (Math.abs(computedHeight - expectedHeight) >= 2 || computedHeight === viewportHeight) {
+                                htmlEl.style.height = vhCalc;
+                              }
+                            }
+                          });
+                        }
+                      }
+                    }
+                  } catch (e) {
+                    console.error('Error updating navbar height:', e);
+                  }
+                }
+                
+                if (document.readyState !== 'loading') {
+                  requestAnimationFrame(function() {
+                    requestAnimationFrame(updateNavbarHeight);
+                  });
+                } else {
+                  document.addEventListener('DOMContentLoaded', function() {
+                    requestAnimationFrame(function() {
+                      requestAnimationFrame(updateNavbarHeight);
+                    });
+                  });
+                }
+                
+                let resizeTimeout;
+                window.addEventListener('resize', function() {
+                  clearTimeout(resizeTimeout);
+                  resizeTimeout = setTimeout(function() {
+                    requestAnimationFrame(updateNavbarHeight);
+                  }, 100);
+                });
+                
+                if (document.fonts && document.fonts.ready) {
+                  document.fonts.ready.then(function() {
+                    requestAnimationFrame(updateNavbarHeight);
+                  });
+                }
+                
+                if (typeof MutationObserver !== 'undefined') {
+                  const observer = new MutationObserver(function() {
+                    requestAnimationFrame(updateNavbarHeight);
+                  });
+                  
+                  function startObserving() {
+                    const navbar = document.getElementById('navbar');
+                    if (navbar) {
+                      observer.observe(navbar, {
+                        childList: true,
+                        subtree: true,
+                        attributes: true,
+                        attributeFilter: ['class', 'style']
+                      });
+                    } else {
+                      setTimeout(startObserving, 100);
+                    }
+                  }
+                  
+                  if (document.readyState !== 'loading') {
+                    startObserving();
+                  } else {
+                    document.addEventListener('DOMContentLoaded', startObserving);
+                  }
+                }
               })();
             `,
           }}

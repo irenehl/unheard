@@ -149,10 +149,12 @@
   },
   "share": {
     "button": "Compartir",
+    "native": "Compartir ahora",
     "x": "Compartir en X",
     "linkedin": "Compartir en LinkedIn",
     "copyLink": "Copiar enlace",
     "copied": "¡Copiado!",
+    "previewLabel": "Vista previa",
     "tweetTemplate": "«{excerpt}» — en Ellas {url}"
   },
   "story": {

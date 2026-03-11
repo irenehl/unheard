@@ -1,9 +1,17 @@
 import { routing } from "@/i18n/routing";
 
-export const DEFAULT_SITE_URL = "https://example.com";
+export const DEFAULT_SITE_URL = "https://unheard.dhuezo.dev/en";
 
 export function getSiteUrl() {
-  return (process.env.SITE_URL || DEFAULT_SITE_URL).replace(/\/+$/, "");
+  const explicitSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const publicSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const vercelUrl = process.env.VERCEL_URL?.trim();
+
+  if (explicitSiteUrl) return explicitSiteUrl.replace(/\/+$/, "");
+  if (publicSiteUrl) return publicSiteUrl.replace(/\/+$/, "");
+  if (vercelUrl) return `https://${vercelUrl.replace(/\/+$/, "")}`;
+
+  return DEFAULT_SITE_URL;
 }
 
 export function buildPath(locale: string, suffix = "") {

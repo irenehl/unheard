@@ -250,6 +250,19 @@ export function FeedClient({
                   </m.div>
                 );
               })}
+              {isLoadingMore &&
+                Array.from({ length: 3 }).map((_, index) => (
+                  <div
+                    key={`loading-${index}`}
+                    className="mb-px w-full break-inside-avoid bg-background p-8"
+                    aria-hidden
+                  >
+                    <div className="h-2 w-24 animate-pulse bg-secondary" />
+                    <div className="mt-5 h-2 w-full animate-pulse bg-secondary" />
+                    <div className="mt-3 h-2 w-[90%] animate-pulse bg-secondary" />
+                    <div className="mt-3 h-2 w-[78%] animate-pulse bg-secondary" />
+                  </div>
+                ))}
             </div>
 
             {showSlowConnection && (

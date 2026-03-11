@@ -144,7 +144,7 @@ export function PhotoUploadModal({ onClose }: { onClose: () => void }) {
         exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.96, y: shouldReduceMotion ? 0 : 12, transition: { duration: shouldReduceMotion ? 0 : 0.18 } }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="bg-background w-screen h-screen overflow-y-auto">
+        <div className="min-h-dvh w-full overflow-y-auto bg-background">
           {/* Header */}
           <div className="flex items-start justify-between p-6 border-b border-border">
             <div>

@@ -129,6 +129,10 @@
 }
 
 @layer base {
+  :root {
+    --navbar-height: 200px;
+  }
+  
   html {
     scroll-behavior: smooth;
     /* Default font size (medium) */
@@ -460,5 +464,23 @@ html.light[data-high-contrast="true"] {
   *:focus-visible {
     outline: 2px solid Highlight !important;
     outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .h-screen {
+    height: calc(100vh - var(--navbar-height)) !important;
+  }
+  
+  .min-h-screen {
+    min-height: calc(100vh - var(--navbar-height)) !important;
+  }
+  
+  .h-dvh {
+    height: calc(100dvh - var(--navbar-height)) !important;
+  }
+  
+  .min-h-dvh {
+    min-height: calc(100dvh - var(--navbar-height)) !important;
   }
 }
