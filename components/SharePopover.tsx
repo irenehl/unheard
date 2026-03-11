@@ -79,7 +79,7 @@ export function SharePopover({
         onClick={() => setOpen((o) => !o)}
         aria-label={t("button")}
         aria-expanded={open}
-        className="flex items-center gap-1.5 text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1.5 text-[0.625rem] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
       >
         <Share2 className="h-3 w-3" aria-hidden />
         {t("button")}
@@ -97,21 +97,21 @@ export function SharePopover({
             <div className="flex flex-col py-1">
               <button
                 onClick={handleX}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-[10px] font-bold tracking-widest uppercase text-foreground hover:bg-secondary transition-colors text-left"
+                className="flex items-center gap-2.5 px-4 py-2.5 text-[0.625rem] font-bold tracking-widest uppercase text-foreground hover:bg-secondary transition-colors text-left"
               >
                 <Twitter className="h-3 w-3 shrink-0" aria-hidden />
                 {t("x")}
               </button>
               <button
                 onClick={handleLinkedIn}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-[10px] font-bold tracking-widest uppercase text-foreground hover:bg-secondary transition-colors text-left"
+                className="flex items-center gap-2.5 px-4 py-2.5 text-[0.625rem] font-bold tracking-widest uppercase text-foreground hover:bg-secondary transition-colors text-left"
               >
                 <Linkedin className="h-3 w-3 shrink-0" aria-hidden />
                 {t("linkedin")}
               </button>
               <button
                 onClick={handleCopy}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-[10px] font-bold tracking-widest uppercase text-foreground hover:bg-secondary transition-colors text-left"
+                className="flex items-center gap-2.5 px-4 py-2.5 text-[0.625rem] font-bold tracking-widest uppercase text-foreground hover:bg-secondary transition-colors text-left"
               >
                 <AnimatePresence mode="wait" initial={false}>
                   {copied ? (

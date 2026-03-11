@@ -6,22 +6,6 @@ import { useCallback } from "react";
 import { motion } from "framer-motion";
 import { useShouldReduceMotion } from "@/lib/motionPrefs";
 
-// #region agent log
-fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-  method: "POST",
-  headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-  body: JSON.stringify({
-    sessionId: "e5cbed",
-    runId: "pre-fix-4",
-    hypothesisId: "H12",
-    location: "components/CategoryFilter.tsx:module-init",
-    message: "CategoryFilter module loaded",
-    data: { module: "CategoryFilter" },
-    timestamp: Date.now(),
-  }),
-}).catch(() => {});
-// #endregion
-
 const CATEGORIES = [
   "work",
   "family",
@@ -101,7 +85,7 @@ export function CategoryFilter() {
           <motion.button
             aria-pressed={activeCategory === null}
             onClick={() => updateParam("category", null)}
-            className={`text-[10px] font-mono tracking-widest uppercase transition-colors ${
+            className={`text-[0.625rem] font-mono tracking-widest uppercase transition-colors ${
               activeCategory === null
                 ? "text-primary font-bold"
                 : "text-muted-foreground hover:text-foreground"
@@ -118,7 +102,7 @@ export function CategoryFilter() {
               onClick={() =>
                 updateParam("category", activeCategory === cat ? null : cat)
               }
-              className={`text-[10px] font-mono tracking-widest uppercase transition-colors ${
+              className={`text-[0.625rem] font-mono tracking-widest uppercase transition-colors ${
                 activeCategory === cat
                   ? "text-primary font-bold"
                   : "text-muted-foreground hover:text-foreground"

@@ -2,29 +2,13 @@ import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
 import { Suspense } from "react";
 import { CategoryFilter } from "@/components/CategoryFilter";
-import { DebugPing } from "@/components/DebugPing";
 import { FeedClient } from "@/components/FeedClient";
 import { PhotoGrid } from "@/components/PhotoGrid";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { buildLocaleAlternates, buildPath, getSiteUrl } from "@/lib/seo";
 import type { Metadata } from "next";
-
-// #region agent log
-fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-  method: "POST",
-  headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-  body: JSON.stringify({
-    sessionId: "e5cbed",
-    runId: "pre-fix-4",
-    hypothesisId: "H11",
-    location: "app/[locale]/page.tsx:module-init",
-    message: "FeedPage module loaded",
-    data: { module: "page" },
-    timestamp: Date.now(),
-  }),
-}).catch(() => {});
-// #endregion
 
 export async function generateMetadata({
   params,
@@ -32,77 +16,39 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  // #region agent log
-  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-    body: JSON.stringify({
-      sessionId: "e5cbed",
-      runId: "pre-fix-1",
-      hypothesisId: "H1",
-      location: "app/[locale]/page.tsx:generateMetadata:start",
-      message: "FeedPage metadata generation started",
-      data: { locale },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
 
   let t: Awaited<ReturnType<typeof getTranslations>>;
   try {
     t = await getTranslations({ locale });
   } catch (error) {
-    // #region agent log
-    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-      body: JSON.stringify({
-        sessionId: "e5cbed",
-        runId: "pre-fix-1",
-        hypothesisId: "H1",
-        location: "app/[locale]/page.tsx:generateMetadata:error",
-        message: "FeedPage metadata getTranslations failed",
-        data: {
-          locale,
-          errorMessage: error instanceof Error ? error.message : "unknown",
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     throw error;
   }
-  // #region agent log
-  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-    body: JSON.stringify({
-      sessionId: "e5cbed",
-      runId: "pre-fix-2",
-      hypothesisId: "H1",
-      location: "app/[locale]/page.tsx:generateMetadata:success",
-      message: "FeedPage metadata translations loaded",
-      data: { locale },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
+  const siteUrl = getSiteUrl();
+  const pagePath = buildPath(locale);
+  const defaultOgImage = `${siteUrl}/opengraph-image`;
+  const defaultTwitterImage = `${siteUrl}/twitter-image`;
 
   return {
     title: t("feed.title"),
     description: t("landing.tagline"),
     alternates: {
-      canonical: `/${locale}`,
+      canonical: `${siteUrl}${pagePath}`,
+      languages: buildLocaleAlternates(),
     },
     openGraph: {
+      type: "website",
+      siteName: "Ellas",
       title: t("feed.title"),
       description: t("landing.tagline"),
-      url: `/${locale}`,
+      url: `${siteUrl}${pagePath}`,
       locale: locale,
+      images: [{ url: defaultOgImage }],
     },
     twitter: {
+      card: "summary_large_image",
       title: t("feed.title"),
       description: t("landing.tagline"),
+      images: [defaultTwitterImage],
     },
   };
 }
@@ -171,49 +117,14 @@ export default async function FeedPage({
 
   if (setupErrorMessage) {
     return (
-      <>
-        <DebugPing
-          marker="feed-page-setup-error-fallback"
-          data={{
-            setupError: setupErrorMessage.slice(0, 140),
-            debugMinimal,
-          }}
-        />
-        <section className="mx-auto max-w-5xl px-6 py-14">
-          <h1 className="text-xl font-semibold text-foreground">Feed setup failed</h1>
-        </section>
-      </>
+      <section className="mx-auto max-w-5xl px-6 py-14">
+        <h1 className="text-xl font-semibold text-foreground">Feed setup failed</h1>
+      </section>
     );
   }
   if (!t) {
-    return (
-      <>
-        <DebugPing
-          marker="feed-page-setup-null-translations"
-          data={{ debugMinimal }}
-        />
-      </>
-    );
+    return null;
   }
-  // #region agent log
-  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-    body: JSON.stringify({
-      sessionId: "e5cbed",
-      runId: "pre-fix-1",
-      hypothesisId: "H2",
-      location: "app/[locale]/page.tsx:FeedPage:setup-success",
-      message: "FeedPage setup completed",
-      data: {
-        locale,
-        type: params.type ?? null,
-        category: params.category ?? null,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
   const type =
     params.type === "honor" || params.type === "tell" ? params.type : undefined;
   const categoryValues: Category[] = [
@@ -241,36 +152,11 @@ export default async function FeedPage({
     params.debugPlainCards === "1" || params.debugPlainCards === "true";
   if (debugMinimal) {
     return (
-      <>
-        <DebugPing
-          marker="feed-page-debug-minimal"
-          data={{ locale, isolateMode, showPhotoGrid, showFilter, showFeed }}
-        />
-        <section className="mx-auto max-w-5xl px-6 py-14">
-          <h1 className="text-xl font-semibold text-foreground">Debug minimal page</h1>
-        </section>
-      </>
+      <section className="mx-auto max-w-5xl px-6 py-14">
+        <h1 className="text-xl font-semibold text-foreground">Debug minimal page</h1>
+      </section>
     );
   }
-  // #region agent log
-  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-    body: JSON.stringify({
-      sessionId: "e5cbed",
-      runId: "pre-fix-1",
-      hypothesisId: "H4",
-      location: "app/[locale]/page.tsx:FeedPage:before-fetchQuery",
-      message: "FeedPage calling testimonies.listFeed",
-      data: {
-        locale,
-        type: type ?? null,
-        category: category ?? null,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
   let initialPage: FeedPage;
   let fetchErrorMessage: string | null = null;
   try {
@@ -284,26 +170,6 @@ export default async function FeedPage({
       },
     });
   } catch (error) {
-    // #region agent log
-    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-      body: JSON.stringify({
-        sessionId: "e5cbed",
-        runId: "pre-fix-1",
-        hypothesisId: "H4",
-        location: "app/[locale]/page.tsx:FeedPage:fetchQuery-error",
-        message: "FeedPage fetchQuery failed",
-        data: {
-          locale,
-          type: type ?? null,
-          category: category ?? null,
-          errorMessage: error instanceof Error ? error.message : "unknown",
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     fetchErrorMessage = error instanceof Error ? error.message : "unknown";
     initialPage = {
       page: [],
@@ -311,59 +177,16 @@ export default async function FeedPage({
       continueCursor: null,
     };
   }
-  // #region agent log
-  fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-    body: JSON.stringify({
-      sessionId: "e5cbed",
-      runId: "pre-fix-1",
-      hypothesisId: "H4",
-      location: "app/[locale]/page.tsx:FeedPage:fetchQuery-success",
-      message: "FeedPage fetchQuery completed",
-      data: {
-        itemCount: initialPage.page.length,
-        isDone: initialPage.isDone,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
   if (fetchErrorMessage) {
     return (
-      <>
-        <DebugPing
-          marker="feed-page-fetch-error-fallback"
-          data={{
-            locale,
-            fetchError: fetchErrorMessage.slice(0, 140),
-            isolateMode,
-            showPhotoGrid,
-            showFilter,
-            showFeed,
-          }}
-        />
-        <section className="mx-auto max-w-5xl px-6 py-14">
-          <h1 className="text-xl font-semibold text-foreground">Feed data fallback</h1>
-        </section>
-      </>
+      <section className="mx-auto max-w-5xl px-6 py-14">
+        <h1 className="text-xl font-semibold text-foreground">Feed data fallback</h1>
+      </section>
     );
   }
 
   return (
     <>
-      <DebugPing
-        marker="feed-page-rendered"
-        data={{
-          locale,
-          itemCount: initialPage.page.length,
-          isolateMode,
-          showPhotoGrid,
-          showFilter,
-          showFeed,
-          plainCards,
-        }}
-      />
       <section
         aria-labelledby="hero-title"
         className="relative flex min-h-[68vh] flex-col justify-between border-b border-border px-6 py-8 sm:px-10 lg:px-16 overflow-hidden"

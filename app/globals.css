@@ -42,90 +42,90 @@
 :root {
   --radius: 0rem;
 
-  /* Dark mode: stark high contrast, inverted newsprint */
-  --background: hsl(0, 0%, 10%);
-  --foreground: hsl(43, 30%, 94%);
+  /* Dark mode: archival paper/microfilm with AAA-first contrast */
+  --background: hsl(0, 0%, 9%);
+  --foreground: hsl(43, 34%, 96%);
 
-  --card: hsl(0, 0%, 10%);
-  --card-foreground: hsl(43, 30%, 94%);
+  --card: hsl(0, 0%, 9%);
+  --card-foreground: hsl(43, 34%, 96%);
 
-  --popover: hsl(0, 0%, 10%);
-  --popover-foreground: hsl(43, 30%, 94%);
+  --popover: hsl(0, 0%, 9%);
+  --popover-foreground: hsl(43, 34%, 96%);
 
   /* Sage green accent */
-  --primary: hsl(120, 13%, 45%);
-  --primary-foreground: hsl(43, 30%, 94%);
+  --primary: hsl(122, 19%, 52%);
+  --primary-foreground: hsl(0, 0%, 7%);
 
-  --secondary: hsl(0, 0%, 15%);
-  --secondary-foreground: hsl(43, 30%, 94%);
+  --secondary: hsl(0, 0%, 14%);
+  --secondary-foreground: hsl(43, 34%, 96%);
 
-  --muted: hsl(0, 0%, 15%);
-  --muted-foreground: hsl(0, 0%, 60%);
+  --muted: hsl(0, 0%, 14%);
+  --muted-foreground: hsl(43, 18%, 76%);
 
-  --accent: hsl(120, 13%, 45%);
-  --accent-foreground: hsl(43, 30%, 94%);
+  --accent: hsl(122, 19%, 52%);
+  --accent-foreground: hsl(0, 0%, 7%);
 
   --destructive: hsl(0, 52%, 48%);
 
-  --border: hsl(0, 0%, 25%);
-  --input: hsl(0, 0%, 25%);
-  --ring: hsl(120, 13%, 45%);
+  --border: hsl(43, 10%, 42%);
+  --input: hsl(43, 10%, 42%);
+  --ring: hsl(122, 24%, 62%);
 
   /* Warm honor accent — used only for tribute labels */
   --honor: hsl(35, 40%, 52%);
 
-  --sidebar: hsl(0, 0%, 10%);
-  --sidebar-foreground: hsl(43, 30%, 94%);
-  --sidebar-primary: hsl(120, 13%, 45%);
-  --sidebar-primary-foreground: hsl(43, 30%, 94%);
-  --sidebar-accent: hsl(0, 0%, 15%);
-  --sidebar-accent-foreground: hsl(43, 30%, 94%);
-  --sidebar-border: hsl(0, 0%, 25%);
-  --sidebar-ring: hsl(120, 13%, 45%);
+  --sidebar: hsl(0, 0%, 9%);
+  --sidebar-foreground: hsl(43, 34%, 96%);
+  --sidebar-primary: hsl(122, 19%, 52%);
+  --sidebar-primary-foreground: hsl(0, 0%, 7%);
+  --sidebar-accent: hsl(0, 0%, 14%);
+  --sidebar-accent-foreground: hsl(43, 34%, 96%);
+  --sidebar-border: hsl(43, 10%, 42%);
+  --sidebar-ring: hsl(122, 24%, 62%);
 }
 
 /* ── Light mode override (newsprint) ───────────────────────── */
 .light {
   /* Newsprint cream */
-  --background: hsl(43, 30%, 94%);
+  --background: hsl(41, 34%, 94%);
   /* Stark charcoal/black */
-  --foreground: hsl(0, 0%, 10%);
+  --foreground: hsl(15, 16%, 12%);
   
-  --card: hsl(43, 30%, 94%);
-  --card-foreground: hsl(0, 0%, 10%);
+  --card: hsl(41, 34%, 94%);
+  --card-foreground: hsl(15, 16%, 12%);
   
-  --popover: hsl(43, 30%, 94%);
-  --popover-foreground: hsl(0, 0%, 10%);
+  --popover: hsl(41, 34%, 94%);
+  --popover-foreground: hsl(15, 16%, 12%);
   
-  --primary: hsl(120, 13%, 45%);
-  --primary-foreground: hsl(43, 30%, 94%);
+  --primary: hsl(125, 24%, 30%);
+  --primary-foreground: hsl(41, 34%, 94%);
   
-  --secondary: hsl(43, 20%, 88%);
-  --secondary-foreground: hsl(0, 0%, 10%);
+  --secondary: hsl(40, 26%, 87%);
+  --secondary-foreground: hsl(15, 16%, 12%);
   
-  --muted: hsl(43, 20%, 88%);
-  --muted-foreground: hsl(0, 0%, 40%);
+  --muted: hsl(40, 26%, 87%);
+  --muted-foreground: hsl(18, 16%, 26%);
   
-  --accent: hsl(120, 13%, 45%);
-  --accent-foreground: hsl(43, 30%, 94%);
+  --accent: hsl(125, 24%, 30%);
+  --accent-foreground: hsl(41, 34%, 94%);
   
   --destructive: hsl(0, 60%, 45%);
   
-  --border: hsl(0, 0%, 10%);
-  --input: hsl(0, 0%, 10%);
-  --ring: hsl(120, 13%, 45%);
+  --border: hsl(17, 16%, 24%);
+  --input: hsl(17, 16%, 24%);
+  --ring: hsl(125, 24%, 30%);
 
   /* Warm honor accent — used only for tribute labels */
   --honor: hsl(35, 40%, 52%);
   
-  --sidebar: hsl(43, 30%, 94%);
-  --sidebar-foreground: hsl(0, 0%, 10%);
-  --sidebar-primary: hsl(120, 13%, 45%);
-  --sidebar-primary-foreground: hsl(43, 30%, 94%);
-  --sidebar-accent: hsl(43, 20%, 88%);
-  --sidebar-accent-foreground: hsl(0, 0%, 10%);
-  --sidebar-border: hsl(0, 0%, 10%);
-  --sidebar-ring: hsl(120, 13%, 45%);
+  --sidebar: hsl(41, 34%, 94%);
+  --sidebar-foreground: hsl(15, 16%, 12%);
+  --sidebar-primary: hsl(125, 24%, 30%);
+  --sidebar-primary-foreground: hsl(41, 34%, 94%);
+  --sidebar-accent: hsl(40, 26%, 87%);
+  --sidebar-accent-foreground: hsl(15, 16%, 12%);
+  --sidebar-border: hsl(17, 16%, 24%);
+  --sidebar-ring: hsl(125, 24%, 30%);
 }
 
 @layer base {
@@ -145,6 +145,9 @@
   html[data-font-size="lg"] {
     font-size: 18px;
   }
+  html[data-font-size="xl"] {
+    font-size: 20px;
+  }
   
   * {
     @apply border-border outline-ring/50;
@@ -152,22 +155,63 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans), system-ui, sans-serif;
+    text-rendering: optimizeLegibility;
   }
 
-  /* Subtle film grain — archive atmosphere */
+  /* Dark archive/newspaper texture overlays */
+  body::before,
   body::after {
     content: "";
     position: fixed;
     inset: 0;
     z-index: 9999;
     pointer-events: none;
+  }
+
+  /* Dark archive scan-lines + vignette */
+  body::before {
+    background:
+      radial-gradient(120% 120% at 50% 50%, transparent 55%, hsl(0 0% 0% / 0.18) 100%),
+      repeating-linear-gradient(
+        to bottom,
+        hsl(43 20% 94% / 0.02) 0px,
+        hsl(43 20% 94% / 0.02) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+    opacity: 0.65;
+  }
+
+  /* Grain layer */
+  body::after {
     background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='1'/></svg>");
-    opacity: 0.028;
+    opacity: 0.036;
+    animation: grainShift 16s steps(10) infinite;
+  }
+
+  /* Light mode texture: newsprint paper + ink impression */
+  .light body::before {
+    background:
+      radial-gradient(130% 140% at 50% 30%, transparent 62%, hsl(20 18% 14% / 0.09) 100%),
+      repeating-linear-gradient(
+        45deg,
+        hsl(20 24% 20% / 0.018) 0px,
+        hsl(20 24% 20% / 0.018) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+    opacity: 0.45;
+  }
+
+  .light body::after {
+    opacity: 0.022;
   }
   
   /* Reduce texture — remove overlays */
+  html[data-reduce-texture="true"] body::before,
   html[data-reduce-texture="true"] body::after {
     opacity: 0 !important;
+    animation: none !important;
   }
 
   /* ── Accessibility: Focus indicators ──────────────────────────── */
@@ -185,6 +229,11 @@
   select:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
+  }
+
+  a:not([class*="no-underline"]) {
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.16em;
   }
 }
 
@@ -212,8 +261,10 @@
   }
 
   /* Reduce film grain opacity for reduced motion */
+  body::before,
   body::after {
     opacity: 0.01;
+    animation: none !important;
   }
 }
 
@@ -239,8 +290,10 @@ html[data-reduce-motion="true"] .anim-3 {
 }
 
 /* Reduce film grain opacity for reduced motion */
+html[data-reduce-motion="true"] body::before,
 html[data-reduce-motion="true"] body::after {
   opacity: 0.01;
+  animation: none !important;
 }
 
 /* ── Archive reveal animations ──────────────────────────────── */
@@ -260,6 +313,21 @@ html[data-reduce-motion="true"] body::after {
 .anim-2 { animation: archiveReveal 0.75s ease-out 0.26s both; }
 .anim-3 { animation: archiveReveal 0.75s ease-out 0.42s both; }
 
+@keyframes grainShift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  30% {
+    transform: translate3d(-0.8%, 0.5%, 0);
+  }
+  60% {
+    transform: translate3d(0.6%, -0.4%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 /* ── Hero display title — fluid scale ───────────────────────── */
 .hero-title {
   font-family: var(--font-display), var(--font-serif), Georgia, serif;
@@ -277,6 +345,85 @@ html[data-reduce-motion="true"] body::after {
   color: var(--foreground);
 }
 
+.story-editor-content .ProseMirror {
+  min-height: 280px;
+  outline: none;
+}
+
+.story-editor-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  pointer-events: none;
+  float: left;
+}
+
+.story-editor-content ul,
+.story-editor-content ol {
+  margin: 0.9rem 0 0.9rem 1.4rem !important;
+  padding-left: 0.5rem !important;
+}
+
+.story-editor-content ul {
+  list-style-type: disc !important;
+}
+
+.story-editor-content ol {
+  list-style-type: decimal !important;
+}
+
+.story-editor-content li {
+  display: list-item !important;
+}
+
+.story-editor-content blockquote {
+  border-left: 2px solid var(--border) !important;
+  margin: 1rem 0 !important;
+  padding-left: 1rem !important;
+  color: var(--muted-foreground) !important;
+}
+
+.story-rich p {
+  margin: 0;
+}
+
+.story-rich p + p {
+  margin-top: 1rem;
+}
+
+.story-rich ul,
+.story-rich ol {
+  margin: 1rem 0 1rem 1.4rem !important;
+  padding-left: 0.5rem !important;
+}
+
+.story-rich ul {
+  list-style-type: disc !important;
+}
+
+.story-rich ol {
+  list-style-type: decimal !important;
+}
+
+.story-rich li {
+  display: list-item !important;
+}
+
+.story-rich blockquote {
+  border-left: 2px solid var(--border) !important;
+  margin: 1rem 0 !important;
+  padding-left: 1rem !important;
+  color: var(--muted-foreground) !important;
+}
+
+.story-rich > p:first-of-type::first-letter {
+  float: left;
+  font-size: 3rem;
+  padding-right: 0.5rem;
+  font-weight: 700;
+  line-height: 0.8;
+  font-family: var(--font-display), var(--font-serif), Georgia, serif;
+}
+
 
 /* ── Hide scrollbar but keep scroll ─────────────────────────── */
 .scrollbar-hide {
@@ -289,5 +436,29 @@ html[data-reduce-motion="true"] body::after {
 
 /* ── Reading prefs: high contrast ───────────────────── */
 html[data-high-contrast="true"] {
-  filter: contrast(1.12);
+  --foreground: hsl(43, 36%, 98%);
+  --muted-foreground: hsl(43, 22%, 88%);
+  --border: hsl(43, 16%, 58%);
+  --input: hsl(43, 16%, 58%);
+  --ring: hsl(130, 36%, 68%);
+}
+
+html.light[data-high-contrast="true"] {
+  --foreground: hsl(12, 22%, 9%);
+  --muted-foreground: hsl(12, 18%, 18%);
+  --border: hsl(15, 20%, 18%);
+  --input: hsl(15, 20%, 18%);
+  --ring: hsl(125, 36%, 24%);
+}
+
+@media (forced-colors: active) {
+  body::before,
+  body::after {
+    content: none !important;
+  }
+
+  *:focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px;
+  }
 }

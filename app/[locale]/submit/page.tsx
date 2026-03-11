@@ -1,6 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
 import { SubmitForm } from "@/components/SubmitForm";
+import { buildLocaleAlternates, buildPath, getSiteUrl } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -16,23 +17,32 @@ export async function generateMetadata({
     intro: string;
   };
 
-  const siteUrl = process.env.SITE_URL || "https://example.com";
+  const siteUrl = getSiteUrl();
+  const pagePath = buildPath(locale, "/submit");
+  const defaultOgImage = `${siteUrl}/opengraph-image`;
+  const defaultTwitterImage = `${siteUrl}/twitter-image`;
 
   return {
     title: submitMessages.title,
     description: submitMessages.intro,
     alternates: {
-      canonical: `/${locale}/submit`,
+      canonical: `${siteUrl}${pagePath}`,
+      languages: buildLocaleAlternates("/submit"),
     },
     openGraph: {
+      type: "website",
+      siteName: "Ellas",
       title: submitMessages.title,
       description: submitMessages.intro,
-      url: `/${locale}/submit`,
+      url: `${siteUrl}${pagePath}`,
       locale: locale,
+      images: [{ url: defaultOgImage }],
     },
     twitter: {
+      card: "summary_large_image",
       title: submitMessages.title,
       description: submitMessages.intro,
+      images: [defaultTwitterImage],
     },
   };
 }

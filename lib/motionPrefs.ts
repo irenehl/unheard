@@ -45,29 +45,6 @@ export function useShouldReduceMotion(): boolean {
     getServerSnapshot
   );
 
-  if (typeof window !== "undefined") {
-    const markerKey = "__agentDebug269760MotionLogged__";
-    const markerStore = window as unknown as Record<string, unknown>;
-    if (!markerStore[markerKey]) {
-      markerStore[markerKey] = true;
-      // #region agent log
-      fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "269760" },
-        body: JSON.stringify({
-          sessionId: "269760",
-          runId: "run2",
-          hypothesisId: "H1",
-          location: "lib/motionPrefs.ts:useShouldReduceMotion",
-          message: "Client instrumentation heartbeat",
-          data: { reduceMotionPref: prefs.reduceMotion },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
-    }
-  }
-
   // Check system preference
   if (typeof window !== "undefined") {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");

@@ -58,6 +58,7 @@
     "fontSmall": "Pequeño",
     "fontMedium": "Mediano",
     "fontLarge": "Grande",
+    "fontXL": "Extra grande",
     "highContrast": "Alto contraste",
     "reduceMotion": "Reducir movimiento",
     "reduceTexture": "Reducir textura"
@@ -101,18 +102,31 @@
     "submitting": "Publicando…",
     "successTitle": "Historia publicada",
     "successMessage": "Gracias por dar voz a esta historia.",
+    "viewStory": "Ver historia",
     "errorGeneric": "Algo salió mal. Intenta de nuevo.",
     "processingNotice": "Tu historia se procesará con IA para detectar el idioma, corregir ortografía y generar traducciones. Tu voz original se preserva siempre.",
-    "charCount": "caracteres"
+    "charCount": "caracteres",
+    "richText": {
+      "bold": "Negrita",
+      "italic": "Cursiva",
+      "bulletList": "Lista con viñetas",
+      "orderedList": "Lista numerada",
+      "quote": "Cita",
+      "undo": "Deshacer",
+      "redo": "Rehacer"
+    }
   },
   "admin": {
     "title": "Panel de administración",
+    "loading": "Cargando…",
     "statusPublished": "Publicado",
     "statusRemoved": "Eliminado",
     "remove": "Eliminar",
     "restore": "Restaurar",
     "flagCount": "{count, plural, one {# reporte} other {# reportes}}",
-    "confirmRemove": "¿Eliminar esta historia?"
+    "confirmRemove": "¿Eliminar esta historia?",
+    "confirmRemoveDescription": "Esta acción eliminará la historia de la vista pública. Puedes restaurarla después.",
+    "cancel": "Cancelar"
   },
   "errors": {
     "notFound": "Página no encontrada",

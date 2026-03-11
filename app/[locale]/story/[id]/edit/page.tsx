@@ -6,6 +6,14 @@ import { Id } from "@/convex/_generated/dataModel";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { EditForm } from "@/components/EditForm";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function EditStoryPage({
   params,
@@ -67,6 +75,7 @@ export default async function EditStoryPage({
         locale={locale}
         initialCategory={testimony.category}
         initialText={testimony.originalText}
+        initialMarkdown={testimony.originalMarkdown}
         initialPhotoUrl={testimony.photoUrl}
         initialSubjectName={testimony.subjectName}
         initialSubjectProfession={testimony.subjectProfession}

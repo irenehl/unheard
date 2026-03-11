@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import ReactMarkdown from "react-markdown";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ReadingPrefsPopover } from "./ReadingPrefsPopover";
@@ -18,12 +19,21 @@ import {
 } from "@/lib/readingPrefs";
 import { useShouldReduceMotion } from "@/lib/motionPrefs";
 
+function isSafeStoryMarkdown(markdown: string): boolean {
+  const hasHtml = /<[^>]+>/.test(markdown);
+  const hasCodeFence = /```/.test(markdown);
+  return !hasHtml && !hasCodeFence;
+}
+
 interface VersionPanelProps {
   testimonyId: string;
   originalText: string;
+  originalMarkdown?: string;
   originalLanguage: string;
   editedText: string;
+  editedMarkdown?: string;
   translatedText: Record<string, string>;
+  translatedMarkdown?: Record<string, string>;
   isFeatured?: boolean;
   isFullPage?: boolean;
   showExpandLink?: boolean;
@@ -70,9 +80,12 @@ const TRUNCATE_LENGTH = 510;
 export function VersionPanel({
   testimonyId,
   originalText,
+  originalMarkdown,
   originalLanguage,
   editedText,
+  editedMarkdown,
   translatedText,
+  translatedMarkdown,
   isFeatured = false,
   isFullPage = false,
   showExpandLink = false,
@@ -116,6 +129,16 @@ export function VersionPanel({
     return text.slice(0, TRUNCATE_LENGTH).trim() + "…";
   }
 
+  function renderMarkdown(markdown: string, hasMoreForTab: boolean) {
+    if (!isSafeStoryMarkdown(markdown)) return null;
+    if (!isFullPage && hasMoreForTab) return null;
+    return (
+      <div className={`story-text story-rich ${isFeatured ? "text-xl md:text-2xl" : ""}`}>
+        <ReactMarkdown>{markdown}</ReactMarkdown>
+      </div>
+    );
+  }
+
   function renderExpandLink(textLength: number, hasMoreForTab: boolean) {
     const shouldShow = hasMoreForTab || textLength > TRUNCATE_LENGTH;
     if (isFullPage) return null;
@@ -124,7 +147,7 @@ export function VersionPanel({
     return (
       <Link
         href={`/${locale}/story/${testimonyId}`}
-        className="mt-4 text-[10px] font-bold tracking-widest uppercase text-foreground hover:text-primary transition-colors inline-block border-b border-foreground pb-0.5"
+        className="mt-4 text-[0.625rem] font-bold tracking-widest uppercase text-foreground hover:text-primary transition-colors inline-block border-b border-foreground pb-0.5"
       >
         [ {t("readFullStory")} ]
       </Link>
@@ -147,22 +170,34 @@ export function VersionPanel({
 
 
     if (activeTab === "original") {
+      const originalMarkdownView =
+        originalMarkdown && originalMarkdown.trim().length > 0
+          ? renderMarkdown(originalMarkdown, showExpandOriginal)
+          : null;
       return (
         <>
-          <p lang={originalLanguage} className={textClass}>
-            {renderText(originalText, showExpandOriginal)}
-          </p>
+          {originalMarkdownView ?? (
+            <p lang={originalLanguage} className={textClass}>
+              {renderText(originalText, showExpandOriginal)}
+            </p>
+          )}
           {renderExpandLink(originalText.length, showExpandOriginal)}
         </>
       );
     }
     
     if (activeTab === "edited") {
+      const editedMarkdownView =
+        editedMarkdown && editedMarkdown.trim().length > 0
+          ? renderMarkdown(editedMarkdown, showExpandEdited)
+          : null;
       return (
         <>
-          <p lang={originalLanguage} className={textClass}>
-            {renderText(editedText, showExpandEdited)}
-          </p>
+          {editedMarkdownView ?? (
+            <p lang={originalLanguage} className={textClass}>
+              {renderText(editedText, showExpandEdited)}
+            </p>
+          )}
           {renderExpandLink(editedText.length, showExpandEdited)}
           <motion.div
             initial={{ opacity: 0 }}
@@ -171,7 +206,7 @@ export function VersionPanel({
           >
             <Badge
               variant="outline"
-              className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
+              className="mt-4 gap-1 text-[0.625rem] uppercase tracking-widest text-muted-foreground rounded-none border-border"
             >
               <Sparkles className="h-3 w-3" />
               {t("editedBadge")}
@@ -182,11 +217,18 @@ export function VersionPanel({
     }
     
     // activeTab === "translated"
+    const translatedMarkdownForLocale = translatedMarkdown?.[locale];
+    const translatedMarkdownView =
+      translatedMarkdownForLocale && translatedMarkdownForLocale.trim().length > 0
+        ? renderMarkdown(translatedMarkdownForLocale, showExpandTranslated)
+        : null;
     return (
       <>
-        <p lang={locale} className={textClass}>
-          {renderText(translated, showExpandTranslated)}
-        </p>
+        {translatedMarkdownView ?? (
+          <p lang={locale} className={textClass}>
+            {renderText(translated, showExpandTranslated)}
+          </p>
+        )}
         {renderExpandLink(translated.length, showExpandTranslated)}
         <motion.div
           initial={{ opacity: 0 }}
@@ -195,7 +237,7 @@ export function VersionPanel({
         >
           <Badge
             variant="outline"
-            className="mt-4 gap-1 text-[10px] uppercase tracking-widest text-muted-foreground rounded-none border-border"
+            className="mt-4 gap-1 text-[0.625rem] uppercase tracking-widest text-muted-foreground rounded-none border-border"
           >
             <Sparkles className="h-3 w-3" />
             {t("translatedBadge")}
@@ -218,7 +260,7 @@ export function VersionPanel({
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="relative rounded-none border-b-2 border-transparent px-0 pb-1 text-[10px] font-bold tracking-widest uppercase text-muted-foreground data-[state=active]:text-foreground data-[state=active]:border-transparent data-[state=active]:shadow-none bg-transparent transition-colors duration-200"
+                className="relative rounded-none border-b-2 border-transparent px-0 pb-1 text-[0.625rem] font-bold tracking-widest uppercase text-muted-foreground data-[state=active]:text-foreground data-[state=active]:border-transparent data-[state=active]:shadow-none bg-transparent transition-colors duration-200"
               >
                 {t(tab)}
                 {/* Sliding underline indicator */}

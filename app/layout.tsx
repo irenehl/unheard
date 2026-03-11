@@ -1,5 +1,6 @@
 import { getLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import { getSiteUrl } from "@/lib/seo";
 import { Cormorant_Garamond, Inter, Newsreader } from "next/font/google";
 import Script from "next/script";
 import type { Metadata } from "next";
@@ -26,7 +27,7 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
-const siteUrl = process.env.SITE_URL || "https://example.com";
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -42,13 +43,23 @@ export const metadata: Metadata = {
     locale: "es",
     alternateLocale: ["en"],
     siteName: "Ellas",
+    url: siteUrl,
     title: "Ellas",
     description: "Stories of women the world never documented. Here, they have a name, a date, and witnesses.",
+    images: [
+      {
+        url: `${siteUrl}/opengraph-image`,
+        width: 1200,
+        height: 630,
+        alt: "Ellas",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Ellas",
     description: "Stories of women the world never documented. Here, they have a name, a date, and witnesses.",
+    images: [`${siteUrl}/twitter-image`],
   },
   robots: {
     index: true,
@@ -140,7 +151,8 @@ export default async function RootLayout({
             `,
           }}
         />
-        {process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID && (
+        {process.env.NODE_ENV === "production" &&
+          process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID && (
           <Script
             id="microsoft-clarity"
             strategy="afterInteractive"

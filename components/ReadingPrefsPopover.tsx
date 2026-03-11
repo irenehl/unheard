@@ -75,7 +75,7 @@ export function ReadingPrefsPopover({
         <div className="mb-4">
           <p className="text-xs text-muted-foreground mb-2">{t("fontSize")}</p>
           <div className="flex gap-1">
-            {(["sm", "md", "lg"] as FontSize[]).map((size) => (
+            {(["sm", "md", "lg", "xl"] as FontSize[]).map((size) => (
               <motion.button
                 key={size}
                 onClick={() => onFontSize(size)}
@@ -91,7 +91,9 @@ export function ReadingPrefsPopover({
                   ? t("fontSmall")
                   : size === "md"
                   ? t("fontMedium")
-                  : t("fontLarge")}
+                  : size === "lg"
+                  ? t("fontLarge")
+                  : t("fontXL")}
               </motion.button>
             ))}
           </div>

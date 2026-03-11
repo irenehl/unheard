@@ -218,7 +218,7 @@ export function PhotoUploadModal({ onClose }: { onClose: () => void }) {
                         {file ? `${t("fieldFileSelected")}: ${file.name}` : t("fieldFileCta")}
                       </span>
                     </label>
-                    <p id="file-hint" className="mt-1 text-[10px] tracking-widest uppercase text-muted-foreground">
+                    <p id="file-hint" className="mt-1 text-[0.625rem] tracking-widest uppercase text-muted-foreground">
                       {t("fieldFileHint")}
                     </p>
                   </div>

@@ -2,9 +2,10 @@ import type { MetadataRoute } from "next";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { routing } from "@/i18n/routing";
+import { getSiteUrl } from "@/lib/seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = process.env.SITE_URL || "https://example.com";
+  const siteUrl = getSiteUrl();
 
   const entries: MetadataRoute.Sitemap = [];
 
@@ -42,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         for (const locale of routing.locales) {
           entries.push({
             url: `${siteUrl}/${locale}/story/${testimony._id}`,
-            lastModified: new Date(testimony.createdAt),
+            lastModified: new Date(testimony.editedAt ?? testimony.createdAt),
             changeFrequency: "weekly",
             priority: 0.7,
           });

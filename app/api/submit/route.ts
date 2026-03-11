@@ -6,8 +6,11 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { validateImageFile } from "@/lib/imageUpload";
 import { getNormalizedConvexUrl } from "@/lib/convexUrl";
+import { markdownToPlainText } from "@/lib/markdown";
 
-const convex = new ConvexHttpClient(getNormalizedConvexUrl());
+function getConvexClient() {
+  return new ConvexHttpClient(getNormalizedConvexUrl());
+}
 
 const VALID_TYPES = ["honor", "tell"] as const;
 const VALID_CATEGORIES = [
@@ -31,12 +34,14 @@ function parseOptionalField(value: FormDataEntryValue | null) {
 
 export async function POST(req: NextRequest) {
   try {
+    const convex = getConvexClient();
     const { userId } = await auth();
 
     const formData = await req.formData();
     const type = formData.get("type");
     const category = formData.get("category");
     const text = formData.get("text");
+    const markdown = formData.get("markdown");
     const authorNameRaw = formData.get("authorName");
     const isAnonymous = formData.get("isAnonymous") === "true";
     const authorName = parseOptionalField(authorNameRaw);
@@ -48,13 +53,23 @@ export async function POST(req: NextRequest) {
 
     const photo = formData.get("photo");
 
+    const originalMarkdown =
+      typeof markdown === "string" && markdown.trim().length > 0
+        ? markdown.trim()
+        : undefined;
+    const originalText =
+      originalMarkdown != null
+        ? markdownToPlainText(originalMarkdown)
+        : typeof text === "string"
+          ? text.trim()
+          : "";
+
     if (
       !type ||
       !VALID_TYPES.includes(type as ValidType) ||
       !category ||
       !VALID_CATEGORIES.includes(category as ValidCategory) ||
-      typeof text !== "string" ||
-      text.trim().length === 0
+      originalText.length === 0
     ) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
@@ -84,8 +99,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Run all three OpenAI steps — only proceed once all complete
-    const { originalLanguage, editedText, translatedText } =
-      await processTestimony(text.trim());
+    const {
+      originalLanguage,
+      editedText,
+      translatedText,
+      editedMarkdown,
+      translatedMarkdown,
+    } = await processTestimony({
+      plainText: originalText,
+      markdown: originalMarkdown,
+    });
 
     // Single atomic Convex mutation — never partial
     const id = await convex.mutation(api.testimonies.create, {
@@ -94,10 +117,13 @@ export async function POST(req: NextRequest) {
       authorId: userId ?? undefined,
       authorName,
       isAnonymous,
-      originalText: text.trim(),
+      originalText,
+      originalMarkdown,
       originalLanguage,
       editedText,
+      editedMarkdown,
       translatedText,
+      translatedMarkdown,
       photoStorageId,
       subjectName,
       subjectProfession,
@@ -107,7 +133,37 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ id }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error) {
+    console.error("Error in /api/submit:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
+    const stack = error instanceof Error ? error.stack : undefined;
+    
+    // Log full error details for debugging
+    if (stack) {
+      console.error("Stack trace:", stack);
+    }
+    
+    if (message.includes("Missing NEXT_PUBLIC_CONVEX_URL")) {
+      return NextResponse.json(
+        { error: "Server configuration error: Convex URL is missing." },
+        { status: 503 }
+      );
+    }
+    if (message.includes("Missing OPENAI_API_KEY")) {
+      return NextResponse.json(
+        { error: "Server configuration error: OpenAI API key is missing." },
+        { status: 503 }
+      );
+    }
+    
+    // Return error message in development, generic message in production
+    const isDevelopment = process.env.NODE_ENV === "development";
+    return NextResponse.json(
+      { 
+        error: isDevelopment ? message : "Internal server error",
+        ...(isDevelopment && stack ? { stack } : {})
+      },
+      { status: 500 }
+    );
   }
 }

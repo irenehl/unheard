@@ -7,6 +7,7 @@ import { Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { DeleteDialog } from "./DeleteDialog";
 import { useShouldReduceMotion } from "@/lib/motionPrefs";
+import { clarityTrack } from "@/lib/clarity";
 
 export function StoryDeleteButton({
   testimonyId,
@@ -25,6 +26,7 @@ export function StoryDeleteButton({
     setIsPending(true);
     try {
       await fetch(`/api/submit/${testimonyId}`, { method: "DELETE" });
+      clarityTrack("story_delete");
       router.push(`/${locale}`);
     } finally {
       setIsPending(false);
@@ -36,7 +38,7 @@ export function StoryDeleteButton({
       <motion.button
         onClick={() => setOpen(true)}
         aria-label={t("delete")}
-        className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1.5 text-[0.625rem] font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
         whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
         transition={{ duration: 0.1 }}
       >

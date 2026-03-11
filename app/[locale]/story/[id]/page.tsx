@@ -12,6 +12,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { cache } from "react";
 import Image from "next/image";
+import { buildLocaleAlternates, buildPath, getSiteUrl } from "@/lib/seo";
 
 // Cache the testimony fetch to avoid double-fetching in generateMetadata and page component
 const getTestimony = cache(async (id: Id<"testimonies">) => {
@@ -59,27 +60,35 @@ export async function generateMetadata({
     ? textForDescription.substring(0, 157) + "..."
     : textForDescription;
 
-  const siteUrl = process.env.SITE_URL || "https://example.com";
-  const url = `${siteUrl}/${locale}/story/${id}`;
+  const siteUrl = getSiteUrl();
+  const pathSuffix = `/story/${id}`;
+  const pagePath = buildPath(locale, pathSuffix);
+  const url = `${siteUrl}${pagePath}`;
+  const openGraphImage = testimony.photoUrl || `${siteUrl}/opengraph-image`;
+  const twitterImage = testimony.photoUrl || `${siteUrl}/twitter-image`;
 
   return {
     title: storyTitle,
     description: description,
     alternates: {
-      canonical: `/${locale}/story/${id}`,
+      canonical: url,
+      languages: buildLocaleAlternates(pathSuffix),
     },
     openGraph: {
+      siteName: "Ellas",
       title: storyTitle,
       description: description,
       url: url,
       locale: locale,
       type: "article",
       publishedTime: new Date(testimony.createdAt).toISOString(),
+      images: [{ url: openGraphImage }],
     },
     twitter: {
       card: "summary_large_image",
       title: storyTitle,
       description: description,
+      images: [twitterImage],
     },
   };
 }
@@ -119,8 +128,8 @@ export default async function StoryPage({
 
   const isHonor = testimony.type === "honor";
 
-  const siteUrl = process.env.SITE_URL || "https://example.com";
-  const url = `${siteUrl}/${locale}/story/${id}`;
+  const siteUrl = getSiteUrl();
+  const url = `${siteUrl}${buildPath(locale, `/story/${id}`)}`;
   const isOwn = userId && testimony.authorId === userId;
   const ageMs = Date.now() - testimony.createdAt;
   const canEdit = isOwn && ageMs < 86_400_000;
@@ -162,7 +171,7 @@ export default async function StoryPage({
         <div className="flex items-center justify-between mb-12">
           <Link
             href={`/${locale}`}
-            className="inline-block text-[10px] font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors border-b border-transparent hover:border-foreground pb-0.5"
+            className="inline-block text-[0.625rem] font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors border-b border-transparent hover:border-foreground pb-0.5"
           >
             {t("common.backToFront")}
           </Link>
@@ -190,7 +199,8 @@ export default async function StoryPage({
               className="text-4xl md:text-6xl text-foreground leading-[1.1] tracking-tight"
               style={{ fontFamily: "var(--font-display), var(--font-serif), Georgia, serif" }}
             >
-              {t("common.storyOf")} {t(`categories.${testimony.category}`)}
+              <span>{t("common.storyOf")}</span>
+              <span style={{ marginLeft: '0.35em' }}>{t(`categories.${testimony.category}`)}</span>
             </h1>
             
             <div className="flex items-center gap-3 text-sm font-mono tracking-widest uppercase text-muted-foreground mt-4">
@@ -215,7 +225,7 @@ export default async function StoryPage({
             {canEdit && (
               <Link
                 href={`/${locale}/story/${id}/edit`}
-                className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1.5 text-[0.625rem] font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
               >
                 {t("story.edit")}
               </Link>
@@ -242,9 +252,12 @@ export default async function StoryPage({
           <VersionPanel
             testimonyId={testimony._id}
             originalText={testimony.originalText}
+            originalMarkdown={testimony.originalMarkdown}
             originalLanguage={testimony.originalLanguage}
             editedText={testimony.editedText}
+            editedMarkdown={testimony.editedMarkdown}
             translatedText={testimony.translatedText}
+            translatedMarkdown={testimony.translatedMarkdown}
             isFullPage={true}
           />
         </div>

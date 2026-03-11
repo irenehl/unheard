@@ -24,9 +24,12 @@ export default defineSchema({
 
     // Text versions — originalText is sacred and never modified
     originalText: v.string(),
+    originalMarkdown: v.optional(v.string()),
     originalLanguage: v.string(),
     editedText: v.string(),
+    editedMarkdown: v.optional(v.string()),
     translatedText: v.record(v.string(), v.string()),
+    translatedMarkdown: v.optional(v.record(v.string(), v.string())),
     photoStorageId: v.optional(v.id("_storage")),
     subjectName: v.optional(v.string()),
     subjectProfession: v.optional(v.string()),

@@ -10,22 +10,6 @@ import { PhotoUploadModal } from "./PhotoUploadModal";
 import { api } from "@/convex/_generated/api";
 import { useShouldReduceMotion } from "@/lib/motionPrefs";
 
-// #region agent log
-fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-  method: "POST",
-  headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-  body: JSON.stringify({
-    sessionId: "e5cbed",
-    runId: "pre-fix-4",
-    hypothesisId: "H14",
-    location: "components/PhotoGrid.tsx:module-init",
-    message: "PhotoGrid module loaded",
-    data: { module: "PhotoGrid" },
-    timestamp: Date.now(),
-  }),
-}).catch(() => {});
-// #endregion
-
 const EASE = [0.25, 0, 0, 1] as [number, number, number, number];
 const VISIBLE_DESKTOP = 4;
 const AUTOPLAY_MS = 4000;
@@ -418,7 +402,7 @@ function UploadButton({ onClick, label }: { onClick: () => void; label: string }
   return (
     <motion.button
       onClick={onClick}
-      className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase bg-black/40 backdrop-blur-sm text-white/80 hover:text-white border border-white/20 hover:border-white/50 px-3 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex items-center gap-2 text-[0.625rem] font-bold tracking-widest uppercase bg-black/40 backdrop-blur-sm text-white/80 hover:text-white border border-white/20 hover:border-white/50 px-3 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
     >
       <Camera className="h-3 w-3" aria-hidden />
@@ -505,7 +489,7 @@ export function PhotoGrid() {
           <Camera className="h-8 w-8 text-muted-foreground" aria-hidden />
           <motion.button
             onClick={() => setUploadOpen(true)}
-            className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+            className="text-[0.625rem] font-bold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
             whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
           >
             {t("uploadCta")}

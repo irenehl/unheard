@@ -68,7 +68,7 @@ export function AdminPanel() {
           aria-busy="true"
           aria-live="polite"
         >
-          Cargando…
+          {t("loading")}
         </motion.p>
       )}
 
@@ -184,13 +184,12 @@ export function AdminPanel() {
           <DialogHeader>
             <DialogTitle>{t("confirmRemove")}</DialogTitle>
             <DialogDescription>
-              Esta acción eliminará la historia de la vista pública. Puedes
-              restaurarla después.
+              {t("confirmRemoveDescription")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmId(null)}>
-              Cancelar
+              {t("cancel")}
             </Button>
             <Button variant="destructive" onClick={handleRemove}>
               {t("remove")}

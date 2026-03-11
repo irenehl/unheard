@@ -6,8 +6,11 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { validateImageFile } from "@/lib/imageUpload";
 import { getNormalizedConvexUrl } from "@/lib/convexUrl";
+import { markdownToPlainText } from "@/lib/markdown";
 
-const convex = new ConvexHttpClient(getNormalizedConvexUrl());
+function getConvexClient() {
+  return new ConvexHttpClient(getNormalizedConvexUrl());
+}
 
 const VALID_CATEGORIES = [
   "work",
@@ -33,6 +36,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const convex = getConvexClient();
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -40,6 +44,7 @@ export async function PUT(
     const formData = await req.formData();
     const category = formData.get("category");
     const text = formData.get("text");
+    const markdown = formData.get("markdown");
     const photoAction = (formData.get("photoAction") as PhotoAction | null) ?? "keep";
     const photo = formData.get("photo");
     const subjectName = parseOptionalField(formData.get("subjectName"));
@@ -48,11 +53,21 @@ export async function PUT(
     const authorProfession = parseOptionalField(formData.get("authorProfession"));
     const authorCountry = parseOptionalField(formData.get("authorCountry"));
 
+    const originalMarkdown =
+      typeof markdown === "string" && markdown.trim().length > 0
+        ? markdown.trim()
+        : undefined;
+    const originalText =
+      originalMarkdown != null
+        ? markdownToPlainText(originalMarkdown)
+        : typeof text === "string"
+          ? text.trim()
+          : "";
+
     if (
       !category ||
       !VALID_CATEGORIES.includes(category as ValidCategory) ||
-      typeof text !== "string" ||
-      text.trim().length === 0 ||
+      originalText.length === 0 ||
       !["keep", "replace", "remove"].includes(photoAction)
     ) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
@@ -86,17 +101,28 @@ export async function PUT(
       photoStorageId = uploaded.storageId as Id<"_storage">;
     }
 
-    const { originalLanguage, editedText, translatedText } =
-      await processTestimony(text.trim());
+    const {
+      originalLanguage,
+      editedText,
+      translatedText,
+      editedMarkdown,
+      translatedMarkdown,
+    } = await processTestimony({
+      plainText: originalText,
+      markdown: originalMarkdown,
+    });
 
     await convex.mutation(api.testimonies.update, {
       id: id as Id<"testimonies">,
       authorId: userId,
       category: category as ValidCategory,
-      originalText: text.trim(),
+      originalText,
+      originalMarkdown,
       originalLanguage,
       editedText,
+      editedMarkdown,
       translatedText,
+      translatedMarkdown,
       photoAction,
       photoStorageId,
       subjectName,
@@ -111,6 +137,18 @@ export async function PUT(
     const message = error instanceof Error ? error.message : "Internal server error";
     if (message === "Unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     if (message === "Edit window expired") return NextResponse.json({ error: message }, { status: 403 });
+    if (message.includes("Missing NEXT_PUBLIC_CONVEX_URL")) {
+      return NextResponse.json(
+        { error: "Server configuration error: Convex URL is missing." },
+        { status: 503 }
+      );
+    }
+    if (message.includes("Missing OPENAI_API_KEY")) {
+      return NextResponse.json(
+        { error: "Server configuration error: OpenAI API key is missing." },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -120,6 +158,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const convex = getConvexClient();
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -134,6 +173,12 @@ export async function DELETE(
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error";
     if (message === "Unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    if (message.includes("Missing NEXT_PUBLIC_CONVEX_URL")) {
+      return NextResponse.json(
+        { error: "Server configuration error: Convex URL is missing." },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

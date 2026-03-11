@@ -1,4 +1,4 @@
-export type FontSize = "sm" | "md" | "lg";
+export type FontSize = "sm" | "md" | "lg" | "xl";
 
 export interface ReadingPrefs {
   fontSize: FontSize;
@@ -25,7 +25,12 @@ export function getStoredReadingPrefs(): ReadingPrefs {
 
     const parsed = JSON.parse(stored);
     return {
-      fontSize: parsed.fontSize === "sm" || parsed.fontSize === "lg" ? parsed.fontSize : "md",
+      fontSize:
+        parsed.fontSize === "sm" ||
+        parsed.fontSize === "lg" ||
+        parsed.fontSize === "xl"
+          ? parsed.fontSize
+          : "md",
       highContrast: Boolean(parsed.highContrast),
       reduceMotion: Boolean(parsed.reduceMotion),
       reduceTexture: Boolean(parsed.reduceTexture),

@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { Loader2, CheckCircle2, Heart, Mic, Upload, X } from "lucide-react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useShouldReduceMotion } from "@/lib/motionPrefs";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { validateImageFile } from "@/lib/imageUpload";
+import { clarityTrack } from "@/lib/clarity";
+import { RichTextStoryEditor } from "@/components/RichTextStoryEditor";
 
 const CATEGORIES = [
   "work",
@@ -60,10 +62,13 @@ export function SubmitForm() {
   const t = useTranslations("submit");
   const tCat = useTranslations("categories");
   const shouldReduceMotion = useShouldReduceMotion();
+  const router = useRouter();
+  const locale = useLocale();
 
   const [type, setType] = useState<Type>("honor");
   const [category, setCategory] = useState<Category>("work");
   const [text, setText] = useState("");
+  const [storyMarkdown, setStoryMarkdown] = useState("");
   const [subjectName, setSubjectName] = useState("");
   const [subjectProfession, setSubjectProfession] = useState("");
   const [subjectCountry, setSubjectCountry] = useState("");
@@ -75,13 +80,19 @@ export function SubmitForm() {
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [createdStoryId, setCreatedStoryId] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState(0);
+  const [editorResetKey, setEditorResetKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const successRedirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const transitionDuration = shouldReduceMotion ? 0 : undefined;
 
   useEffect(() => {
     return () => {
+      if (successRedirectTimeoutRef.current) {
+        clearTimeout(successRedirectTimeoutRef.current);
+      }
       if (photoPreviewUrl?.startsWith("blob:")) {
         URL.revokeObjectURL(photoPreviewUrl);
       }
@@ -135,6 +146,7 @@ export function SubmitForm() {
       formData.append("type", type);
       formData.append("category", category);
       formData.append("text", text);
+      formData.append("markdown", storyMarkdown);
       formData.append("authorName", authorName);
       formData.append("isAnonymous", String(isAnonymous));
       if (type === "honor" && subjectName.trim()) {
@@ -159,8 +171,15 @@ export function SubmitForm() {
         body: formData,
       });
       if (!res.ok) throw new Error("Submit failed");
+      const payload = (await res.json()) as { id?: string };
+      const newStoryId = payload.id ?? null;
+
       setStatus("success");
+      setCreatedStoryId(newStoryId);
+      clarityTrack("submit_success");
       setText("");
+      setStoryMarkdown("");
+      setEditorResetKey((k) => k + 1);
       setSubjectName("");
       setSubjectProfession("");
       setSubjectCountry("");
@@ -168,6 +187,12 @@ export function SubmitForm() {
       setAuthorProfession("");
       setAuthorCountry("");
       clearPhoto();
+
+      if (newStoryId) {
+        successRedirectTimeoutRef.current = setTimeout(() => {
+          router.push(`/${locale}/story/${newStoryId}`);
+        }, 1500);
+      }
     } catch {
       setStatus("error");
       setErrorMessage(t("errorGeneric"));
@@ -213,11 +238,23 @@ export function SubmitForm() {
 
           <Button
             variant="outline"
-            onClick={() => setStatus("idle")}
+            onClick={() => {
+              setCreatedStoryId(null);
+              setStatus("idle");
+            }}
             className="font-mono text-[0.65rem] tracking-[0.2em] uppercase rounded-none border-border hover:bg-accent h-12 px-8 transition-colors"
           >
             {t("submitButton")}
           </Button>
+          {createdStoryId && (
+            <Button
+              variant="default"
+              onClick={() => router.push(`/${locale}/story/${createdStoryId}`)}
+              className="font-mono text-[0.65rem] tracking-[0.2em] uppercase rounded-none h-12 px-8"
+            >
+              {t("viewStory")}
+            </Button>
+          )}
         </motion.div>
       ) : (
         /* ── Form ── */
@@ -346,15 +383,24 @@ export function SubmitForm() {
                 {text.length} {t("charCount")}
               </motion.span>
             </Label>
-            <Textarea
+            <RichTextStoryEditor
+              key={editorResetKey}
               id="story-text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
+              initialMarkdown={storyMarkdown}
               placeholder={t("textPlaceholder")}
-              required
-              aria-required="true"
-              className="min-h-[280px] resize-y leading-relaxed border border-border bg-transparent rounded-none p-5 text-lg shadow-none focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground transition-colors"
-              style={{ fontFamily: "var(--font-serif), Georgia, serif" }}
+              labels={{
+                bold: t("richText.bold"),
+                italic: t("richText.italic"),
+                bulletList: t("richText.bulletList"),
+                orderedList: t("richText.orderedList"),
+                quote: t("richText.quote"),
+                undo: t("richText.undo"),
+                redo: t("richText.redo"),
+              }}
+              onChange={(markdown, plainText) => {
+                setStoryMarkdown(markdown);
+                setText(plainText);
+              }}
             />
           </motion.div>
 
@@ -381,7 +427,7 @@ export function SubmitForm() {
                   {photoFile ? `${t("photoSelected")}: ${photoFile.name}` : t("photoSelect")}
                 </span>
               </label>
-              <p className="text-[10px] tracking-widest uppercase text-muted-foreground">
+              <p className="text-[0.625rem] tracking-widest uppercase text-muted-foreground">
                 {t("photoHint")}
               </p>
 
@@ -401,7 +447,7 @@ export function SubmitForm() {
                     type="button"
                     variant="outline"
                     onClick={clearPhoto}
-                    className="rounded-none border-border text-[10px] tracking-[0.2em] uppercase"
+                    className="rounded-none border-border text-[0.625rem] tracking-[0.2em] uppercase"
                   >
                     <X className="mr-1 h-3 w-3" aria-hidden />
                     {t("photoRemove")}

@@ -6,10 +6,13 @@ import { Id } from "@/convex/_generated/dataModel";
 import { validateImageFile } from "@/lib/imageUpload";
 import { getNormalizedConvexUrl } from "@/lib/convexUrl";
 
-const convex = new ConvexHttpClient(getNormalizedConvexUrl());
+function getConvexClient() {
+  return new ConvexHttpClient(getNormalizedConvexUrl());
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const convex = getConvexClient();
     const { userId } = await auth();
 
     const formData = await req.formData();
@@ -55,7 +58,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ id }, { status: 201 });
   } catch (error) {
-    console.error("Error in /api/profiles POST:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
+    if (message.includes("Missing NEXT_PUBLIC_CONVEX_URL")) {
+      return NextResponse.json(
+        { error: "Server configuration error: Convex URL is missing." },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

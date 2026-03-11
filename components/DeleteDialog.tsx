@@ -59,14 +59,14 @@ export function DeleteDialog({
                 <button
                   onClick={onCancel}
                   disabled={isPending}
-                  className="flex-1 border border-foreground px-4 py-2.5 text-[10px] font-bold tracking-widest uppercase text-foreground hover:bg-secondary transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
+                  className="flex-1 border border-foreground px-4 py-2.5 text-[0.625rem] font-bold tracking-widest uppercase text-foreground hover:bg-secondary transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
                 >
                   {t("deleteCancel")}
                 </button>
                 <button
                   onClick={onConfirm}
                   disabled={isPending}
-                  className="flex-1 bg-foreground text-background px-4 py-2.5 text-[10px] font-bold tracking-widest uppercase hover:opacity-80 transition-opacity disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
+                  className="flex-1 bg-foreground text-background px-4 py-2.5 text-[0.625rem] font-bold tracking-widest uppercase hover:opacity-80 transition-opacity disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2"
                 >
                   {isPending ? "…" : t("deleteConfirmButton")}
                 </button>

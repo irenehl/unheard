@@ -11,6 +11,7 @@ import { VersionPanel } from "./VersionPanel";
 import dynamic from "next/dynamic";
 import { useShouldReduceMotion } from "@/lib/motionPrefs";
 import type { Id } from "@/convex/_generated/dataModel";
+import { clarityTrack } from "@/lib/clarity";
 
 const SharePopover = dynamic(
   () => import("./SharePopover").then((mod) => mod.SharePopover),
@@ -37,7 +38,7 @@ type Testimony = {
   photoUrl?: string | null;
 };
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ?? "";
 
 export function TestimonyCard({
   testimony,
@@ -90,18 +91,22 @@ export function TestimonyCard({
   const canEdit = isOwn && ageMs < 86_400_000;
   const hoursLeft = Math.floor((86_400_000 - ageMs) / 3_600_000);
 
-  const storyUrl = `${SITE_URL}/${locale}/story/${testimony._id}`;
+  const siteUrl =
+    SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+  const storyUrl = `${siteUrl}/${locale}/story/${testimony._id}`;
 
   async function handleFlag() {
     if (flagged || isPlaceholder) return;
     setFlagged(true);
     await flag({ id: testimony._id });
+    clarityTrack("story_flag");
   }
 
   async function handleDelete() {
     setDeleteLoading(true);
     try {
       await fetch(`/api/submit/${testimony._id}`, { method: "DELETE" });
+      clarityTrack("story_delete");
       setDeleteOpen(false);
     } finally {
       setDeleteLoading(false);
@@ -121,7 +126,7 @@ export function TestimonyCard({
       >
         <header className="mb-5 border-b border-border pb-3">
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-            <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-foreground">
+            <div className="flex items-center gap-2 text-[0.625rem] font-bold tracking-widest uppercase text-foreground">
               <span>{t(`categories.${testimony.category}`)}</span>
               <span className="text-muted-foreground">—</span>
               <time dateTime={new Date(testimony.createdAt).toISOString()}>
@@ -135,7 +140,7 @@ export function TestimonyCard({
               )}
             </div>
 
-            <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-muted-foreground">
+            <div className="flex items-center gap-2 text-[0.625rem] font-bold tracking-widest uppercase text-muted-foreground">
               <span className={isHonor ? "text-[hsl(35,40%,52%)]" : ""}>
                 {t(typeKey)}
               </span>
@@ -193,7 +198,7 @@ export function TestimonyCard({
                 {canEdit && (
                   <div className="flex flex-col items-end">
                     <motion.button
-                      className="flex items-center gap-1.5 text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+                      className="flex items-center gap-1.5 text-[0.625rem] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
                       onClick={() => router.push(`/${locale}/story/${testimony._id}/edit`)}
                       aria-label={t("story.edit")}
                       whileTap={shouldReduceMotion ? undefined : { scale: 0.85 }}
@@ -202,7 +207,7 @@ export function TestimonyCard({
                       <Pencil className="h-3 w-3" aria-hidden />
                       {t("story.edit")}
                     </motion.button>
-                    <span className="text-[9px] tracking-widest uppercase text-muted-foreground mt-0.5">
+                    <span className="text-[0.5625rem] tracking-widest uppercase text-muted-foreground mt-0.5">
                       {hoursLeft < 1
                         ? t("story.editTimeLeftLess")
                         : t("story.editTimeLeft", { hours: hoursLeft })}
@@ -210,7 +215,7 @@ export function TestimonyCard({
                   </div>
                 )}
                 <motion.button
-                  className="flex items-center gap-1.5 text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-1.5 text-[0.625rem] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setDeleteOpen(true)}
                   aria-label={t("story.delete")}
                   whileTap={shouldReduceMotion ? undefined : { scale: 0.85 }}
@@ -225,7 +230,7 @@ export function TestimonyCard({
             {/* Flag button — not own stories */}
             {!isOwn && !isPlaceholder && (
               <motion.button
-                className={`flex items-center gap-1.5 text-[10px] tracking-widest uppercase h-auto p-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity rounded-none ${
+                className={`flex items-center gap-1.5 text-[0.625rem] tracking-widest uppercase h-auto p-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity rounded-none ${
                   flagged
                     ? "text-primary cursor-default"
                     : "text-muted-foreground hover:text-foreground"

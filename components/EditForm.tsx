@@ -9,7 +9,6 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { validateImageFile } from "@/lib/imageUpload";
 import {
@@ -20,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useShouldReduceMotion } from "@/lib/motionPrefs";
+import { RichTextStoryEditor } from "@/components/RichTextStoryEditor";
 
 const CATEGORIES = [
   "work",
@@ -57,6 +57,7 @@ export function EditForm({
   locale,
   initialCategory,
   initialText,
+  initialMarkdown,
   initialPhotoUrl,
   initialSubjectName,
   initialSubjectProfession,
@@ -70,6 +71,7 @@ export function EditForm({
   locale: string;
   initialCategory: Category;
   initialText: string;
+  initialMarkdown?: string | null;
   initialPhotoUrl?: string | null;
   initialSubjectName?: string | null;
   initialSubjectProfession?: string | null;
@@ -87,6 +89,7 @@ export function EditForm({
 
   const [category, setCategory] = useState<Category>(initialCategory);
   const [text, setText] = useState(initialText);
+  const [storyMarkdown, setStoryMarkdown] = useState(initialMarkdown ?? initialText);
   const [subjectName, setSubjectName] = useState(initialSubjectName ?? "");
   const [subjectProfession, setSubjectProfession] = useState(
     initialSubjectProfession ?? ""
@@ -166,6 +169,7 @@ export function EditForm({
       const formData = new FormData();
       formData.append("category", category);
       formData.append("text", text);
+      formData.append("markdown", storyMarkdown);
       formData.append("photoAction", photoAction);
       if (isHonor && subjectName.trim()) {
         formData.append("subjectName", subjectName.trim());
@@ -371,15 +375,23 @@ export function EditForm({
                 {text.length} {t("charCount")}
               </motion.span>
             </Label>
-            <Textarea
+            <RichTextStoryEditor
               id="story-text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
+              initialMarkdown={storyMarkdown}
               placeholder={t("textPlaceholder")}
-              required
-              aria-required="true"
-              className="min-h-[280px] resize-y leading-relaxed border border-border bg-transparent rounded-none p-5 text-lg shadow-none focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground transition-colors"
-              style={{ fontFamily: "var(--font-serif), Georgia, serif" }}
+              labels={{
+                bold: t("richText.bold"),
+                italic: t("richText.italic"),
+                bulletList: t("richText.bulletList"),
+                orderedList: t("richText.orderedList"),
+                quote: t("richText.quote"),
+                undo: t("richText.undo"),
+                redo: t("richText.redo"),
+              }}
+              onChange={(markdown, plainText) => {
+                setStoryMarkdown(markdown);
+                setText(plainText);
+              }}
             />
           </motion.div>
 
@@ -406,7 +418,7 @@ export function EditForm({
                   {photoFile ? `${t("photoSelected")}: ${photoFile.name}` : t("photoReplace")}
                 </span>
               </label>
-              <p className="text-[10px] tracking-widest uppercase text-muted-foreground">
+              <p className="text-[0.625rem] tracking-widest uppercase text-muted-foreground">
                 {t("photoHint")}
               </p>
 
@@ -436,7 +448,7 @@ export function EditForm({
                           setPhotoAction("keep");
                           if (fileInputRef.current) fileInputRef.current.value = "";
                         }}
-                        className="rounded-none border-border text-[10px] tracking-[0.2em] uppercase"
+                        className="rounded-none border-border text-[0.625rem] tracking-[0.2em] uppercase"
                       >
                         {t("photoKeep")}
                       </Button>
@@ -445,7 +457,7 @@ export function EditForm({
                       type="button"
                       variant="outline"
                       onClick={clearSelectedPhoto}
-                      className="rounded-none border-border text-[10px] tracking-[0.2em] uppercase"
+                      className="rounded-none border-border text-[0.625rem] tracking-[0.2em] uppercase"
                     >
                       <X className="mr-1 h-3 w-3" aria-hidden />
                       {t("photoRemove")}

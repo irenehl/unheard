@@ -58,6 +58,7 @@
     "fontSmall": "Small",
     "fontMedium": "Medium",
     "fontLarge": "Large",
+    "fontXL": "Extra large",
     "highContrast": "High contrast",
     "reduceMotion": "Reduce motion",
     "reduceTexture": "Reduce texture"
@@ -101,18 +102,31 @@
     "submitting": "Publishing…",
     "successTitle": "Story published",
     "successMessage": "Thank you for giving voice to this story.",
+    "viewStory": "View story",
     "errorGeneric": "Something went wrong. Please try again.",
     "processingNotice": "Your story will be processed by AI to detect language, correct spelling, and generate translations. Your original voice is always preserved.",
-    "charCount": "characters"
+    "charCount": "characters",
+    "richText": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "bulletList": "Bullet list",
+      "orderedList": "Numbered list",
+      "quote": "Blockquote",
+      "undo": "Undo",
+      "redo": "Redo"
+    }
   },
   "admin": {
     "title": "Admin panel",
+    "loading": "Loading…",
     "statusPublished": "Published",
     "statusRemoved": "Removed",
     "remove": "Remove",
     "restore": "Restore",
     "flagCount": "{count, plural, one {# report} other {# reports}}",
-    "confirmRemove": "Remove this story?"
+    "confirmRemove": "Remove this story?",
+    "confirmRemoveDescription": "This action removes the story from public view. You can restore it later.",
+    "cancel": "Cancel"
   },
   "errors": {
     "notFound": "Page not found",
@@ -127,7 +141,7 @@
   "common": {
     "language": "Language",
     "backToFront": "← Back to Front Page",
-    "storyOf": "A Story of",
+    "storyOf": "A story of",
     "skipToContent": "Skip to main content",
     "toggleTheme": "Toggle theme",
     "themeLight": "Light theme",

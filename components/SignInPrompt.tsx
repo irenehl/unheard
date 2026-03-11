@@ -80,7 +80,7 @@ export function SignInPrompt({ returnUrl }: { returnUrl: string }) {
 
       <motion.p
         variants={itemVariants}
-        className="text-[10px] tracking-widest uppercase text-muted-foreground max-w-sm"
+        className="text-[0.625rem] tracking-widest uppercase text-muted-foreground max-w-sm"
       >
         {t("signInNote")}
       </motion.p>

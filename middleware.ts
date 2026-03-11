@@ -25,7 +25,8 @@ export default clerkMiddleware(async (auth, req) => {
     const role = (sessionClaims?.metadata as { role?: string } | undefined)
       ?.role;
     if (role !== "admin") {
-      const url = new URL(`/`, req.url);
+      const locale = req.nextUrl.pathname.split("/")[1] || routing.defaultLocale;
+      const url = new URL(`/${locale}`, req.url);
       return Response.redirect(url);
     }
   }

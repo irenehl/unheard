@@ -18,22 +18,6 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import * as React from "react";
 
-// #region agent log
-fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-  method: "POST",
-  headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-  body: JSON.stringify({
-    sessionId: "e5cbed",
-    runId: "pre-fix-4",
-    hypothesisId: "H13",
-    location: "components/FeedClient.tsx:module-init",
-    message: "FeedClient module loaded",
-    data: { module: "FeedClient" },
-    timestamp: Date.now(),
-  }),
-}).catch(() => {});
-// #endregion
-
 type Category =
   | "work"
   | "family"
@@ -144,65 +128,6 @@ export function FeedClient({
   });
 
   React.useEffect(() => {
-    // #region agent log
-    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-      body: JSON.stringify({
-        sessionId: "e5cbed",
-        runId: "pre-fix-6",
-        hypothesisId: "H21",
-        location: "components/FeedClient.tsx:useEffect:hydration-snapshot",
-        message: "FeedClient hydrated with initial and current lengths",
-        data: {
-          locale,
-          initialLen: initialPage.page.length,
-          itemsLen: items.length,
-          filterKey,
-          initialFilterKey,
-          typeParam: typeParam ?? null,
-          categoryParam: categoryParam ?? null,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, [
-    locale,
-    initialPage.page.length,
-    items.length,
-    filterKey,
-    initialFilterKey,
-    typeParam,
-    categoryParam,
-  ]);
-
-  React.useEffect(() => {
-    if (!liveProbe) return;
-    // #region agent log
-    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-      body: JSON.stringify({
-        sessionId: "e5cbed",
-        runId: "pre-fix-7",
-        hypothesisId: "H22",
-        location: "components/FeedClient.tsx:useEffect:live-probe",
-        message: "FeedClient live Convex probe completed",
-        data: {
-          locale,
-          liveProbeLen: liveProbe.page.length,
-          liveProbeIsDone: liveProbe.isDone,
-          safeType: safeType ?? null,
-          safeCategory: safeCategory ?? null,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, [locale, liveProbe, safeType, safeCategory]);
-
-  React.useEffect(() => {
     if (!liveProbe) return;
     if (items.length > 0) return;
     if (liveProbe.page.length === 0) return;
@@ -210,28 +135,7 @@ export function FeedClient({
     setItems(liveProbe.page as FeedItem[]);
     setCursor(liveProbe.isDone ? null : liveProbe.continueCursor);
     setLoadError(false);
-
-    // #region agent log
-    fetch("http://127.0.0.1:7479/ingest/f9decefb-3c3f-477f-b3c7-07260e8eb19d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "e5cbed" },
-      body: JSON.stringify({
-        sessionId: "e5cbed",
-        runId: "post-fix-3",
-        hypothesisId: "H23",
-        location: "components/FeedClient.tsx:useEffect:recover-from-live-probe",
-        message: "Recovered feed items from live Convex query",
-        data: {
-          locale,
-          recoveredLen: liveProbe.page.length,
-          safeType: safeType ?? null,
-          safeCategory: safeCategory ?? null,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, [items.length, liveProbe, locale, safeType, safeCategory]);
+  }, [items.length, liveProbe]);
 
   React.useEffect(() => {
     setItems(initialPage.page);
@@ -318,7 +222,7 @@ export function FeedClient({
                       variants={shouldReduceMotion ? { hidden: {}, visible: {} } : itemVariants}
                       className="mb-px w-full break-inside-avoid bg-background p-6"
                     >
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                      <p className="text-[0.625rem] uppercase tracking-widest text-muted-foreground">
                         {testimony.type} · {testimony.category}
                       </p>
                       <p className="mt-3 text-sm text-foreground line-clamp-6">
